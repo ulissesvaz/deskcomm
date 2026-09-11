@@ -108,4 +108,12 @@ describe("formatCents", () => {
     // O fallback precisa continuar informativo — o número certo, não "—" nem "".
     expect(formatCents(24990, "")).toContain("249");
   });
+
+  it("formata Libra Esterlina (GBP)", () => {
+    expect(formatCents(19900, "GBP")).toBe("£199.00");
+  });
+
+  it("formata Euro (EUR)", () => {
+    expect(formatCents(19900, "EUR")).toBe("€199.00");
+  });
 });
