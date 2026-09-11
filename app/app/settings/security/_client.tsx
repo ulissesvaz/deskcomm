@@ -1,5 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -70,6 +71,16 @@ export function SecurityClient({
       {/* O modal é o MESMO do bloqueador de tela cheia — reusado, não copiado.
           Ele recarrega a página ao terminar, e o servidor reavalia o estado. */}
       {ativando ? <MfaEnrollModal motivo="escolha" /> : null}
+
+      <Card className="space-y-3 p-6">
+        <h2 className="text-sm font-semibold">{t("Senha")}</h2>
+        <p className="text-xs text-muted-foreground">
+          {t("Defina uma nova senha para sua conta. Se a verificação em duas etapas estiver ativada, o código de 6 dígitos será pedido para confirmar.")}
+        </p>
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/login/reset">{t("Trocar senha")}</Link>
+        </Button>
+      </Card>
 
       <Card className="space-y-3 p-6">
         <div className="flex items-start justify-between gap-4">

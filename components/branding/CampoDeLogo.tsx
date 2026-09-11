@@ -309,7 +309,7 @@ export function CampoDeLogo({
             <div key={rotulo} className="space-y-1">
               <div
                 data-previa-do-logo={rotulo === t("Aparência clara") ? "claro" : "escuro"}
-                className="flex h-24 items-center justify-center rounded-sm border border-border px-4"
+                className="flex h-40 items-center justify-center rounded-sm border border-border px-4"
                 style={{ backgroundColor: fundo }}
               >
                 {emVigor ? (
@@ -323,7 +323,7 @@ export function CampoDeLogo({
                   <img
                     src={emVigor}
                     alt={nomeEmVigor}
-                    className="max-h-12 w-auto max-w-full object-contain"
+                    className="max-h-32 w-auto max-w-full object-contain"
                   />
                 ) : (
                   <span

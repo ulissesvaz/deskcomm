@@ -52,6 +52,8 @@ function doRascunho(
   r: Rascunho,
   t: (s: string) => string,
 ): Record<string, unknown> | { erro: string } {
+  if (r.codigo.trim() === "") return { erro: t("Preencha o Código — é o que identifica este produto no catálogo.") };
+  if (r.nome.trim().length < 2) return { erro: t("Preencha o Nome (pelo menos 2 letras).") };
   const preco_cents = precoParaCentavos(r.preco);
   if (preco_cents === null) return { erro: t("Preço inválido. Escreva assim: 5.499,00") };
   const custo_cents = r.custo.trim() === "" ? null : precoParaCentavos(r.custo);
@@ -248,16 +250,19 @@ export function ProdutosClient({
         <div className="mb-6 rounded-lg border p-4" data-testid="form-produto">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm">
-              {t("Código")}
+              {t("Código")} <span className="text-destructive">*</span>
               <input
                 value={rascunho.codigo}
                 onChange={(e) => setRascunho({ ...rascunho, codigo: e.target.value })}
                 className="mt-1 h-9 w-full rounded-md border px-3"
                 data-testid="produto-codigo"
               />
+              <span className="mt-1 block text-xs text-muted-foreground">
+                {t("O identificador deste produto (SKU, código de barras, ou qualquer código seu).")}
+              </span>
             </label>
             <label className="text-sm">
-              {t("Nome")}
+              {t("Nome")} <span className="text-destructive">*</span>
               <input
                 value={rascunho.nome}
                 onChange={(e) => setRascunho({ ...rascunho, nome: e.target.value })}
@@ -282,7 +287,7 @@ export function ProdutosClient({
               />
             </label>
             <label className="text-sm">
-              {t("Preço de venda")}
+              {t("Preço de venda")} <span className="text-destructive">*</span>
               <input
                 value={rascunho.preco}
                 onChange={(e) => setRascunho({ ...rascunho, preco: e.target.value })}
