@@ -130,6 +130,29 @@ describe("POST /api/v1/products/import — reimportar não pisa a moeda de quem 
   });
 });
 
+describe("POST /api/v1/products/import — preço parcelado da planilha é gravado", () => {
+  /**
+   * ⚠️ O CASO DA REVISÃO FINAL. O parser (`lib/catalogo/planilha.ts`) já lia a
+   * coluna "parcelado" para `preco_parcelado_cents`, mas o handler nunca
+   * incluía o campo no objeto gravado — o valor era lido e descartado. Ao
+   * contrário de `moeda` (que é EXCLUSIVA de produto novo, ver comentário no
+   * topo do arquivo), `preco_parcelado_cents` pertence a `base()`: igual
+   * `preco_cents`/`custo_cents`, reimportar deve atualizar o valor também em
+   * produto já existente.
+   */
+  it("grava preco_parcelado_cents vindo da coluna 'parcelado' da planilha", async () => {
+    vi.mocked(createClient).mockResolvedValue(supabaseCom("BRL", []) as never);
+    const { POST } = await import("./route");
+
+    const conteudo = "codigo,nome,preco,parcelado\nIP15,iPhone 15,5499.00,5999.00";
+    const arquivo = new File([conteudo], "catalogo.csv", { type: "text/csv" });
+
+    await POST(pedido(arquivo));
+
+    expect(upserts.flat()[0]).toMatchObject({ codigo: "IP15", preco_parcelado_cents: 599900 });
+  });
+});
+
 // Este teste isola o handler; autoridade de suporte é exercitada na suíte própria.
 vi.mock("@/lib/impersonate/support", async (importOriginal) => ({
   ...await importOriginal<typeof import("@/lib/impersonate/support")>(),

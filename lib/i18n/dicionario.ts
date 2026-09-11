@@ -7091,6 +7091,7 @@ export const DICIONARIO: Traducoes = {
   "Não consegui ler essa planilha.": { es: "No pude leer esa planilla." },
   "Não consegui enviar o arquivo.": { es: "No pude enviar el archivo." },
   "Preço inválido. Escreva assim: 5.499,00": { es: "Precio inválido. Escríbalo así: 5.499,00" },
+  "Preço parcelado inválido.": { es: "Precio a plazos inválido." },
   "Custo inválido.": { es: "Costo inválido." },
   "novos": { es: "nuevos" },
   "atualizados": { es: "actualizados" },
@@ -7100,6 +7101,15 @@ export const DICIONARIO: Traducoes = {
   "…e mais": { es: "…y más" },
   "Código": { es: "Código" },
   "Preço de venda": { es: "Precio de venta" },
+  "Preço parcelado": { es: "Precio a plazos" },
+  "O valor TOTAL quando o cliente parcela — o agente divide isso pelas semanas que o cliente pedir. Deixe em branco se este produto não pode ser parcelado.": {
+    es: "El valor TOTAL cuando el cliente paga a plazos — el agente lo divide entre las semanas que el cliente pida. Déjelo en blanco si este producto no puede pagarse a plazos.",
+  },
+  "Já vem marcada com a moeda da sua loja. Troque só se ESTE produto for vendido em outra.": {
+    es: "Ya viene marcada con la moneda de su tienda. Cámbiela solo si ESTE producto se vende en otra.",
+  },
+  "ou": { es: "o" },
+  "parcelado": { es: "a plazos" },
   "(opcional)": { es: "(opcional)" },
   "Serve para o atendente saber até onde pode negociar. Não aparece para o cliente.": {
     es: "Sirve para que el asistente sepa hasta dónde puede negociar. No se le muestra al cliente.",

@@ -162,18 +162,45 @@ describe("crm_calc_installment", () => {
     const r = (await crmCalcInstallment.handler(
       { codigo: "SEM-PARC", semanas: 10, entrada_cents: 0 },
       ctxComProduto({ codigo: "SEM-PARC", preco_parcelado_cents: null, moeda: "GBP" }),
-    )) as { erro?: string };
+    )) as { erro?: string; mensagem?: string };
 
     expect(r.erro).toBe("sem_parcelamento");
+    expect(r.mensagem).toBe(
+      "este produto não tem preço parcelado cadastrado — informe que não há opção de " +
+        "parcelamento, não invente um valor.",
+    );
+  });
+
+  /**
+   * ⚠️ O CASO DA REVISÃO FINAL. `preco_parcelado_cents: 0` é tratado como "sem
+   * parcelamento" em `crm_search_products` e na lista de produtos (os dois com
+   * checagem falsy) — mas aqui a checagem era `=== null`, então um produto com
+   * `0` caía direto no cálculo e, com a entrada padrão 0, `0 >= 0` disparava
+   * "entrada_maior_que_o_total": dizia ao cliente que a entrada (zero) dele era
+   * maior que o total (também zero). Este teste prova que os três lugares
+   * concordam agora.
+   */
+  it("recusa como sem_parcelamento quando preco_parcelado_cents é 0, sem tentar dividir", async () => {
+    const r = (await crmCalcInstallment.handler(
+      { codigo: "ZERO", semanas: 10, entrada_cents: 0 },
+      ctxComProduto({ codigo: "ZERO", preco_parcelado_cents: 0, moeda: "GBP" }),
+    )) as { erro?: string; mensagem?: string };
+
+    expect(r.erro).toBe("sem_parcelamento");
+    expect(r.mensagem).toBeDefined();
   });
 
   it("recusa quando a entrada é maior ou igual ao total parcelado", async () => {
     const r = (await crmCalcInstallment.handler(
       { codigo: "IP15", semanas: 10, entrada_cents: 188100 },
       ctxComProduto(PRODUTO_PARCELAVEL),
-    )) as { erro?: string };
+    )) as { erro?: string; mensagem?: string };
 
     expect(r.erro).toBe("entrada_maior_que_o_total");
+    expect(r.mensagem).toBe(
+      "a entrada informada é maior ou igual ao valor total parcelado — confirme o valor da " +
+        "entrada com o cliente.",
+    );
   });
 
   it("recusa quando o produto não existe nesta organização", async () => {

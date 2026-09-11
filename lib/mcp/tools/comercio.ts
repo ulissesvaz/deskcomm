@@ -337,9 +337,28 @@ export const crmCalcInstallment: McpToolDefinition<typeof calcInstallmentInputSh
     if (!data) return { erro: "produto_nao_encontrado" };
 
     const produto = data as { preco_parcelado_cents: number | null; moeda: string };
-    if (produto.preco_parcelado_cents === null) return { erro: "sem_parcelamento" };
+    // Falsy, não `=== null`: consistente com os outros dois lugares que decidem
+    // "este produto tem preço parcelado" (`crmSearchProducts` acima e a lista
+    // em `app/app/products/_client.tsx`), os dois já tratando `0` como "não
+    // tem". Com `=== null`, um `preco_parcelado_cents: 0` caía no cálculo, e
+    // com a entrada padrão 0 a comparação `0 >= 0` devolvia
+    // "entrada_maior_que_o_total" — dizendo ao cliente que a entrada dele (zero)
+    // era maior que um total que também é zero, o que não faz sentido nenhum.
+    if (!produto.preco_parcelado_cents) {
+      return {
+        erro: "sem_parcelamento",
+        mensagem:
+          "este produto não tem preço parcelado cadastrado — informe que não há opção de " +
+          "parcelamento, não invente um valor.",
+      };
+    }
     if (input.entrada_cents >= produto.preco_parcelado_cents) {
-      return { erro: "entrada_maior_que_o_total" };
+      return {
+        erro: "entrada_maior_que_o_total",
+        mensagem:
+          "a entrada informada é maior ou igual ao valor total parcelado — confirme o valor da " +
+          "entrada com o cliente.",
+      };
     }
 
     // Arredonda PARA CIMA de propósito: a loja nunca recebe menos que o total
