@@ -6,6 +6,11 @@
 alter table public.catalog_products
   add column if not exists preco_parcelado_cents integer;
 
-alter table public.catalog_products
-  add constraint if not exists catalog_products_preco_parcelado_nao_negativo
-  check (preco_parcelado_cents is null or preco_parcelado_cents >= 0);
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'catalog_products_preco_parcelado_nao_negativo') then
+    alter table public.catalog_products
+      add constraint catalog_products_preco_parcelado_nao_negativo
+      check (preco_parcelado_cents is null or preco_parcelado_cents >= 0);
+  end if;
+end $$;
