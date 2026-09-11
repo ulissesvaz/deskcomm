@@ -8,7 +8,7 @@ import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/api/client";
-import { formatCents } from "@/lib/money";
+import { formatCents, MOEDAS_SERVIDAS, simboloDaMoeda, type MoedaServida } from "@/lib/money";
 import { precoParaCentavos, type Produto } from "@/lib/schemas/produtos";
 
 interface Textos {
@@ -32,21 +32,12 @@ interface Rascunho {
   marca: string;
   categoria: string;
   preco: string;
+  preco_parcelado: string;
   custo: string;
   quantidade: string;
   controla_estoque: boolean;
+  moeda: MoedaServida;
 }
-
-const VAZIO: Rascunho = {
-  codigo: "",
-  nome: "",
-  marca: "",
-  categoria: "",
-  preco: "",
-  custo: "",
-  quantidade: "0",
-  controla_estoque: true,
-};
 
 function doRascunho(
   r: Rascunho,
@@ -58,6 +49,11 @@ function doRascunho(
   if (preco_cents === null) return { erro: t("Preço inválido. Escreva assim: 5.499,00") };
   const custo_cents = r.custo.trim() === "" ? null : precoParaCentavos(r.custo);
   if (r.custo.trim() !== "" && custo_cents === null) return { erro: t("Custo inválido.") };
+  const parceladoTexto = r.preco_parcelado.trim();
+  const preco_parcelado_cents = parceladoTexto === "" ? null : precoParaCentavos(parceladoTexto);
+  if (parceladoTexto !== "" && preco_parcelado_cents === null) {
+    return { erro: t("Preço parcelado inválido.") };
+  }
 
   return {
     codigo: r.codigo.trim(),
@@ -65,26 +61,41 @@ function doRascunho(
     ...(r.marca.trim() ? { marca: r.marca.trim() } : {}),
     ...(r.categoria.trim() ? { categoria: r.categoria.trim() } : {}),
     preco_cents,
+    preco_parcelado_cents,
     custo_cents,
     controla_estoque: r.controla_estoque,
     quantidade: Number(r.quantidade) || 0,
+    moeda: r.moeda,
   };
 }
 
 export function ProdutosClient({
   inicial,
   podeEditar,
+  moedaOrg,
   textos,
 }: {
   inicial: Produto[];
   podeEditar: boolean;
+  moedaOrg: MoedaServida;
   textos: Textos;
 }) {
   const t = useT();
   const router = useRouter();
   const [busca, setBusca] = React.useState("");
   const [criando, setCriando] = React.useState(false);
-  const [rascunho, setRascunho] = React.useState<Rascunho>(VAZIO);
+  const [rascunho, setRascunho] = React.useState<Rascunho>({
+    codigo: "",
+    nome: "",
+    marca: "",
+    categoria: "",
+    preco: "",
+    preco_parcelado: "",
+    custo: "",
+    quantidade: "0",
+    controla_estoque: true,
+    moeda: moedaOrg,
+  });
   const [salvando, setSalvando] = React.useState(false);
   const [importando, setImportando] = React.useState(false);
   const [resumo, setResumo] = React.useState<ResumoDaImportacao | null>(null);
@@ -108,7 +119,18 @@ export function ProdutosClient({
     try {
       await apiClient.post("/api/v1/products", corpo);
       toast.success(t("Produto cadastrado"));
-      setRascunho(VAZIO);
+      setRascunho({
+        codigo: "",
+        nome: "",
+        marca: "",
+        categoria: "",
+        preco: "",
+        preco_parcelado: "",
+        custo: "",
+        quantidade: "0",
+        controla_estoque: true,
+        moeda: moedaOrg,
+      });
       setCriando(false);
       router.refresh();
     } catch (e) {
@@ -308,6 +330,37 @@ export function ProdutosClient({
                 {t("Serve para o atendente saber até onde pode negociar. Não aparece para o cliente.")}
               </span>
             </label>
+            <label className="text-sm">
+              {t("Preço parcelado")} <span className="text-muted-foreground">{t("(opcional)")}</span>
+              <input
+                value={rascunho.preco_parcelado}
+                onChange={(e) => setRascunho({ ...rascunho, preco_parcelado: e.target.value })}
+                placeholder="1.881,00"
+                className="mt-1 h-9 w-full rounded-md border px-3"
+                data-testid="produto-preco-parcelado"
+              />
+              <span className="mt-1 block text-xs text-muted-foreground">
+                {t("O valor TOTAL quando o cliente parcela — o agente divide isso pelas semanas que o cliente pedir. Deixe em branco se este produto não pode ser parcelado.")}
+              </span>
+            </label>
+            <label className="text-sm">
+              {t("Moeda")}
+              <select
+                value={rascunho.moeda}
+                onChange={(e) => setRascunho({ ...rascunho, moeda: e.target.value as MoedaServida })}
+                className="mt-1 h-9 w-full rounded-md border px-3"
+                data-testid="produto-moeda"
+              >
+                {MOEDAS_SERVIDAS.map((m) => (
+                  <option key={m} value={m}>
+                    {m} · {simboloDaMoeda(m)}
+                  </option>
+                ))}
+              </select>
+              <span className="mt-1 block text-xs text-muted-foreground">
+                {t("Já vem marcada com a moeda da sua loja. Troque só se ESTE produto for vendido em outra.")}
+              </span>
+            </label>
           </div>
 
           <label className="mt-3 flex items-center gap-2 text-sm">
@@ -367,6 +420,11 @@ export function ProdutosClient({
               </div>
               <span className="shrink-0 tabular-nums font-medium">
                 {formatCents(p.preco_cents, p.moeda)}
+                {p.preco_parcelado_cents ? (
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {t("ou")} {formatCents(p.preco_parcelado_cents, p.moeda)} {t("parcelado")}
+                  </span>
+                ) : null}
               </span>
               {podeEditar ? (
                 <Button
