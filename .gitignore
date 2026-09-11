@@ -80,6 +80,9 @@ supabase/.branches/
 
 # Arquivos pessoais do dono da instalação (logos, prints etc.) — nunca sobem pro repo
 _arquivos-locais/
+
+# Worktrees locais de features em desenvolvimento
+.worktrees/
 inbox-with-real-msgs.png
 .e2e-creds.json
 .e2e-agente-mcp.json
