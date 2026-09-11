@@ -44,7 +44,7 @@ import {
   crmGetOrgMemory,
   crmSaveOrgMemory,
 } from "./evolucao";
-import { crmListContactOrders, crmSearchProducts } from "./comercio";
+import { crmCalcInstallment, crmListContactOrders, crmSearchProducts } from "./comercio";
 import { crmListPrivacyRequests } from "./privacidade";
 import {
   crmArchiveStage,
@@ -109,6 +109,7 @@ export const allTools: ReadonlyArray<McpToolDefinition> = [
   crmSaveOrgMemory,
   crmListContactOrders,
   crmSearchProducts,
+  crmCalcInstallment,
   crmListPrivacyRequests,
   // read — organizar a operação (W4)
   crmListStages,

@@ -296,3 +296,64 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
     };
   },
 };
+
+// ---------------------------------------------------------------------------
+// calcular parcela — NUNCA o modelo fazendo a conta
+// ---------------------------------------------------------------------------
+
+const calcInstallmentInputShape = {
+  codigo: z.string().trim().min(1).describe("o código do produto, exatamente como voltou em crm_search_products"),
+  semanas: z.number().int().min(1).describe("quantas semanas o cliente quer para pagar"),
+  entrada_cents: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .default(0)
+    .describe("valor da entrada em centavos, se o cliente vai dar uma — 0 se não"),
+};
+
+export const crmCalcInstallment: McpToolDefinition<typeof calcInstallmentInputShape> = {
+  name: "crm_calc_installment",
+  description:
+    "Calcula o valor exato da parcela semanal de um produto. Use SEMPRE que o cliente quiser " +
+    "parcelar — nunca divida o preço de cabeça, nem o preço à vista (esse é fixo e não entra na " +
+    "conta). O cálculo é (preço parcelado − entrada) ÷ semanas, arredondado para cima. Se a " +
+    "ferramenta devolver um `erro`, diga ao cliente o motivo (produto sem parcelamento, entrada " +
+    "maior que o total) — não invente um valor.",
+  inputSchema: calcInstallmentInputShape,
+  category: "read",
+  requiresRole: "agent",
+  requiresScope: "mcp:read",
+  handler: async (input, ctx) => {
+    const { data, error } = await ctx.supabase
+      .from("catalog_products")
+      .select("preco_parcelado_cents, moeda")
+      .eq("organization_id", ctx.organizationId)
+      .eq("codigo", input.codigo)
+      .maybeSingle();
+
+    if (error) throw new Error(`calcular_parcela_falhou: ${error.message}`);
+    if (!data) return { erro: "produto_nao_encontrado" };
+
+    const produto = data as { preco_parcelado_cents: number | null; moeda: string };
+    if (produto.preco_parcelado_cents === null) return { erro: "sem_parcelamento" };
+    if (input.entrada_cents >= produto.preco_parcelado_cents) {
+      return { erro: "entrada_maior_que_o_total" };
+    }
+
+    // Arredonda PARA CIMA de propósito: a loja nunca recebe menos que o total
+    // combinado — a diferença de arredondamento (no máximo alguns centavos)
+    // fica embutida na primeira parcela. Mesmo princípio de "falha fechada"
+    // de precoParaCentavos (lib/schemas/produtos.ts).
+    const restante = produto.preco_parcelado_cents - input.entrada_cents;
+    const valor_parcela_cents = Math.ceil(restante / input.semanas);
+
+    return {
+      valor_parcela_cents,
+      valor_parcela_formatado: formatCents(valor_parcela_cents, produto.moeda),
+      semanas: input.semanas,
+      moeda: produto.moeda,
+    };
+  },
+};

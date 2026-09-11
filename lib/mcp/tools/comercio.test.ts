@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { crmSearchProducts } from "./comercio";
+import { crmCalcInstallment, crmSearchProducts } from "./comercio";
 import type { McpContext } from "../types";
 
 /** Só o formato do campo que este arquivo mede — não o contrato inteiro. */
@@ -99,5 +99,89 @@ describe("crm_search_products — preço parcelado", () => {
     )) as { produtos: Array<{ preco_parcelado?: string }> };
 
     expect(resultado.produtos[0]!.preco_parcelado).toBeUndefined();
+  });
+});
+
+/** Mock de uma única linha de catalog_products, buscada por (organization_id, codigo). */
+function ctxComProduto(produto: Record<string, unknown> | null): McpContext {
+  const query = {
+    select: () => query,
+    eq: () => query,
+    maybeSingle: async () => ({ data: produto, error: null }),
+  };
+  return {
+    organizationId: "22222222-2222-4222-8222-222222222222",
+    role: "agent",
+    actor: { type: "ai_agent", id: "run-1", agent_id: "agent-1" },
+    apiTokenId: "33333333-3333-4333-8333-333333333333",
+    requestId: "44444444-4444-4444-8444-444444444444",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    supabase: { from: () => query } as any,
+  } as McpContext;
+}
+
+describe("crm_calc_installment", () => {
+  const PRODUTO_PARCELAVEL = {
+    codigo: "IP15",
+    preco_parcelado_cents: 188100,
+    moeda: "GBP",
+  };
+
+  it("calcula a parcela sem entrada, arredondando para cima", async () => {
+    const r = (await crmCalcInstallment.handler(
+      { codigo: "IP15", semanas: 15, entrada_cents: 0 },
+      ctxComProduto(PRODUTO_PARCELAVEL),
+    )) as { valor_parcela_cents: number; valor_parcela_formatado: string };
+
+    // 188100 / 15 = 12540.0 exato
+    expect(r.valor_parcela_cents).toBe(12540);
+    expect(r.valor_parcela_formatado).toBe("£125.40");
+  });
+
+  it("arredonda para cima quando a divisão não fecha redondo", async () => {
+    const r = (await crmCalcInstallment.handler(
+      { codigo: "IP15", semanas: 13, entrada_cents: 0 },
+      ctxComProduto(PRODUTO_PARCELAVEL),
+    )) as { valor_parcela_cents: number };
+
+    // 188100 / 13 = 14469.23... -> arredonda para 14470
+    expect(r.valor_parcela_cents).toBe(14470);
+  });
+
+  it("desconta a entrada antes de dividir", async () => {
+    const r = (await crmCalcInstallment.handler(
+      { codigo: "IP15", semanas: 15, entrada_cents: 10000 },
+      ctxComProduto(PRODUTO_PARCELAVEL),
+    )) as { valor_parcela_cents: number };
+
+    // (188100 - 10000) / 15 = 11873.33... -> arredonda para 11874
+    expect(r.valor_parcela_cents).toBe(11874);
+  });
+
+  it("recusa quando o produto não tem preço parcelado", async () => {
+    const r = (await crmCalcInstallment.handler(
+      { codigo: "SEM-PARC", semanas: 10, entrada_cents: 0 },
+      ctxComProduto({ codigo: "SEM-PARC", preco_parcelado_cents: null, moeda: "GBP" }),
+    )) as { erro?: string };
+
+    expect(r.erro).toBe("sem_parcelamento");
+  });
+
+  it("recusa quando a entrada é maior ou igual ao total parcelado", async () => {
+    const r = (await crmCalcInstallment.handler(
+      { codigo: "IP15", semanas: 10, entrada_cents: 188100 },
+      ctxComProduto(PRODUTO_PARCELAVEL),
+    )) as { erro?: string };
+
+    expect(r.erro).toBe("entrada_maior_que_o_total");
+  });
+
+  it("recusa quando o produto não existe nesta organização", async () => {
+    const r = (await crmCalcInstallment.handler(
+      { codigo: "NAO-EXISTE", semanas: 10, entrada_cents: 0 },
+      ctxComProduto(null),
+    )) as { erro?: string };
+
+    expect(r.erro).toBe("produto_nao_encontrado");
   });
 });
