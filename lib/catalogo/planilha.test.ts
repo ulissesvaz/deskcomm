@@ -16,6 +16,7 @@ const DICIONARIO_FAKE: Record<string, string> = {
   "preço não reconhecido (": "PRECIO NO RECONOCIDO (",
   " — escreva assim: 5.499,00": " — ESCRÍBALO ASÍ: 5.499,00",
   "custo não reconhecido (": "COSTO NO RECONOCIDO (",
+  "preço parcelado não reconhecido (": "PRECIO PARCELADO NO RECONOCIDO (",
   "código repetido na planilha (": "CÓDIGO REPETIDO EN LA PLANILLA (",
 };
 const gritar = (texto: string): string => DICIONARIO_FAKE[texto] ?? texto;
@@ -38,6 +39,13 @@ describe("lerPlanilha — mensagens de erro passam por t()", () => {
     const resultado = lerPlanilha(csv, gritar);
     if ("erro" in resultado) throw new Error("não deveria ser erro de planilha inteira");
     expect(resultado.erros[0]!.motivo).toBe('COSTO NO RECONOCIDO ("xyz")');
+  });
+
+  it("traduz preço parcelado não reconhecido por completo", () => {
+    const csv = "codigo,nome,preco,preço parcelado\nX1,Produto,10.00,xyz\n";
+    const resultado = lerPlanilha(csv, gritar);
+    if ("erro" in resultado) throw new Error("não deveria ser erro de planilha inteira");
+    expect(resultado.erros[0]!.motivo).toBe('PRECIO PARCELADO NO RECONOCIDO ("xyz")');
   });
 
   it("traduz código repetido por completo", () => {

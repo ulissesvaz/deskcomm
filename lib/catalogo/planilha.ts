@@ -156,7 +156,7 @@ export function lerPlanilha(
       continue;
     }
 
-    const parceladoTexto = valor("preco_parcelado").trim();
+    const parceladoTexto = valor("preco_parcelado");
     const preco_parcelado_cents = parceladoTexto === "" ? null : precoParaCentavos(parceladoTexto);
     if (parceladoTexto !== "" && preco_parcelado_cents === null) {
       erros.push({
