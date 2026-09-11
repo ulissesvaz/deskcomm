@@ -69,8 +69,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   // requireRole("manager") acima e do enum fechado do Zod (MOEDAS_SERVIDAS).
   // Ausente no corpo = cai no padrão da organização, como sempre.
   const { moeda: moedaEnviada, ...produto } = parsed.data;
-  const moedaDaOrg = await moedaDaOrganizacao(supabase, authz.org.orgId);
-  const moeda = moedaEnviada ?? moedaDaOrg;
+  const moeda = moedaEnviada ?? (await moedaDaOrganizacao(supabase, authz.org.orgId));
   const { data, error } = await supabase
     .from("catalog_products")
     .insert({ ...produto, moeda, organization_id: authz.org.orgId, origem: "manual" })

@@ -88,7 +88,7 @@ describe("POST /api/v1/products — moeda do produto", () => {
 
     expect(resposta.status).toBe(201);
     expect(inserido).toMatchObject({ moeda: "GBP" });
-    expect(orgIdLido).toBe(ORG_ID);
+    expect(orgIdLido).toBeNull();
   });
 
   it("cai na moeda da organização quando o corpo não manda nenhuma", async () => {
