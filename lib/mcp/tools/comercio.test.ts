@@ -80,3 +80,24 @@ describe("crm_search_products — preço na convenção da moeda", () => {
     expect(semNbsp(resultado.produtos[0]!.preco)).toBe("R$ 249,90");
   });
 });
+
+describe("crm_search_products — preço parcelado", () => {
+  it("devolve o preço parcelado formatado quando o produto tem um", async () => {
+    const resultado = (await crmSearchProducts.handler(
+      { termo: "iphone", limite: 8, somente_disponiveis: true },
+      ctxCom([{ ...PRODUTO_MXN, moeda: "GBP", preco_cents: 119900, preco_parcelado_cents: 188100 }]),
+    )) as { produtos: Array<{ preco: string; preco_parcelado?: string }> };
+
+    expect(resultado.produtos[0]!.preco).toBe("£1,199.00");
+    expect(resultado.produtos[0]!.preco_parcelado).toBe("£1,881.00");
+  });
+
+  it("não inclui preco_parcelado quando o produto não tem", async () => {
+    const resultado = (await crmSearchProducts.handler(
+      { termo: "iphone", limite: 8, somente_disponiveis: true },
+      ctxCom([PRODUTO_MXN]),
+    )) as { produtos: Array<{ preco_parcelado?: string }> };
+
+    expect(resultado.produtos[0]!.preco_parcelado).toBeUndefined();
+  });
+});

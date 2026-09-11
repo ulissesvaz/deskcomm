@@ -140,7 +140,10 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
     "⚠️ SE VOLTAR MAIS DE UM produto com `empate: true`, NÃO escolha por conta própria — os dois " +
     "casam igualmente o que ela disse, e a diferença entre eles é de preço. Pergunte qual é. " +
     "Lista vazia significa que a loja não tem esse item cadastrado: não invente, ofereça consultar " +
-    "com a equipe.",
+    "com a equipe. " +
+    "⚠️ `preco` é o preço À VISTA — nunca divida ele. Quando o produto tem `preco_parcelado`, esse é " +
+    "o valor TOTAL que pode ser parcelado; se o cliente quiser parcelar, use a ferramenta " +
+    "crm_calc_installment para calcular o valor da parcela — nunca calcule de cabeça.",
   inputSchema: produtosInputShape,
   category: "read",
   requiresRole: "agent",
@@ -183,7 +186,7 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
       const { data: lote, error, count } = await ctx.supabase
         .from("catalog_products")
         .select(
-          "id, codigo, nome, descricao, marca, categoria, preco_cents, moeda, controla_estoque, quantidade, ativo",
+          "id, codigo, nome, descricao, marca, categoria, preco_cents, preco_parcelado_cents, moeda, controla_estoque, quantidade, ativo",
           { count: "exact" },
         )
         .eq("organization_id", ctx.organizationId)
@@ -223,6 +226,7 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
       marca: string | null;
       categoria: string | null;
       preco_cents: number;
+      preco_parcelado_cents: number | null;
       moeda: string;
       controla_estoque: boolean;
       quantidade: number;
@@ -272,6 +276,12 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
         nome: produto.nome,
         preco: formatCents(produto.preco_cents, produto.moeda),
         preco_cents: produto.preco_cents,
+        ...(produto.preco_parcelado_cents
+          ? {
+              preco_parcelado: formatCents(produto.preco_parcelado_cents, produto.moeda),
+              preco_parcelado_cents: produto.preco_parcelado_cents,
+            }
+          : {}),
         ...(produto.marca ? { marca: produto.marca } : {}),
         ...(produto.descricao ? { descricao: produto.descricao } : {}),
         disponivel: !produto.controla_estoque || produto.quantidade > 0,
