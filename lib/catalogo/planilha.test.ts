@@ -121,3 +121,21 @@ describe("lerPlanilha — a recusa nomeia a coluna que falta", () => {
     expect(erro).not.toContain("de nombre");
   });
 });
+
+describe("lerPlanilha — preço parcelado (coluna opcional)", () => {
+  it("lê a coluna 'preço parcelado' quando presente", () => {
+    const csv = "codigo,nome,preco,preço parcelado\nIP15,iPhone 15,1199.00,1881.00\n";
+    const r = lerPlanilha(csv);
+    expect("erro" in r).toBe(false);
+    if ("erro" in r) return;
+    expect(r.produtos[0]!.preco_parcelado_cents).toBe(188100);
+  });
+
+  it("planilha sem a coluna continua funcionando (sem parcelamento)", () => {
+    const csv = "codigo,nome,preco\nIP15,iPhone 15,1199.00\n";
+    const r = lerPlanilha(csv);
+    expect("erro" in r).toBe(false);
+    if ("erro" in r) return;
+    expect(r.produtos[0]!.preco_parcelado_cents).toBeNull();
+  });
+});
