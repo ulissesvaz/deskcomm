@@ -335,6 +335,13 @@ export const DICIONARIO: Traducoes = {
   "A seleção anterior contém áreas que não existem mais. Confira e salve novamente.": { es: "La selección anterior contiene áreas que ya no existen. Revísala y vuelve a guardar." },
   "Salvar interface": { es: "Guardar interfaz" },
   "Sua navegação foi atualizada. Você pode continuar nesta tela.": { es: "Tu navegación se ha actualizado. Puedes continuar en esta pantalla." },
+  "Acesso por etapa": { es: "Acceso por etapa" },
+  "Acesso por etapa de": { es: "Acceso por etapa de" },
+  "Marque as etapas do funil que esta pessoa deve enxergar automaticamente no Inbox e no Kanban — sem precisar que ninguém atribua nada a ela. Sem nenhuma marcada, nada muda para ela.": {
+    es: "Marca las etapas del embudo que esta persona debe ver automáticamente en el Inbox y en el Kanban — sin necesidad de que nadie le asigne nada. Sin ninguna marcada, no cambia nada para ella.",
+  },
+  "Salvar acesso": { es: "Guardar acceso" },
+  "Acesso por etapa atualizado.": { es: "Acceso por etapa actualizado." },
   // ─── Cabeçalhos de grupo da barra lateral ───
   //
   // ⚠️ NUNCA TIVERAM TRADUÇÃO, e o defeito era invisível: `Sidebar.tsx:83` já

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { ROLE_RANK } from "@/lib/auth/types";
+import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeamMembersClient } from "./_components/TeamMembersClient";
@@ -42,6 +43,22 @@ export default async function TeamPage({
   const isAdmin = !!activeOrg && ROLE_RANK[activeOrg.role] >= ROLE_RANK.admin;
   const isManager = !!activeOrg && ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
 
+  const supabase = await createClient();
+  const { data: etapasData } = activeOrg
+    ? await supabase
+        .from("crm_stages")
+        .select("id, name, pipeline_id, position")
+        .eq("organization_id", activeOrg.orgId)
+        .order("pipeline_id")
+        .order("position")
+    : { data: null };
+  const etapas = (etapasData ?? []) as Array<{
+    id: string;
+    name: string;
+    pipeline_id: string;
+    position: number;
+  }>;
+
   return (
     <div className="flex h-full flex-col gap-6 p-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -64,7 +81,12 @@ export default async function TeamPage({
           <TabsTrigger value="attendants">{t("Atendimento")}</TabsTrigger>
         </TabsList>
         <TabsContent value="members" className="mt-4">
-          <TeamMembersClient currentUserId={user.id} canManage={isAdmin} />
+          <TeamMembersClient
+            currentUserId={user.id}
+            canManage={isAdmin}
+            canManageStageAccess={isManager}
+            etapas={etapas}
+          />
         </TabsContent>
         <TabsContent value="attendants" className="mt-4">
           {isManager ? (
