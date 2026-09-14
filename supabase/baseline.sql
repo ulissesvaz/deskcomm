@@ -23429,6 +23429,39 @@ $$;
 revoke all on function public.fn_mover_lead_com_permissao_de_etapa(uuid, uuid, numeric, timestamptz) from public, anon;
 grant execute on function public.fn_mover_lead_com_permissao_de_etapa(uuid, uuid, numeric, timestamptz) to authenticated, service_role;
 
+-- ---- 0235 — granted_by nullable + on delete set null (migration 0235) ----
+--
+-- Forward-fix de S2.4: a 0234 deixou user_stage_access.granted_by NOT NULL
+-- sem ON DELETE. Ver o cabeçalho da migration 0235 para o raciocínio
+-- completo; aqui é o mesmo SQL, idempotente, aplicado no self-host.
+
+do $$
+declare
+  v_constraint text;
+begin
+  select c.conname into v_constraint
+    from pg_constraint c
+   where c.conrelid = 'public.user_stage_access'::regclass
+     and c.contype = 'f'
+     and c.confrelid = 'auth.users'::regclass
+     and array_length(c.conkey, 1) = 1
+     and c.conkey[1] = (
+       select attnum from pg_attribute
+        where attrelid = c.conrelid and attname = 'granted_by'
+     );
+
+  if v_constraint is not null then
+    execute format('alter table public.user_stage_access drop constraint %I', v_constraint);
+  end if;
+end
+$$;
+
+alter table public.user_stage_access alter column granted_by drop not null;
+
+alter table public.user_stage_access
+  add constraint user_stage_access_granted_by_fkey
+  foreign key (granted_by) references auth.users(id) on delete set null;
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES
