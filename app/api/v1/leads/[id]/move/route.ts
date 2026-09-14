@@ -89,49 +89,56 @@ export async function POST(
     );
   }
 
-  // OCC update (Pattern B / Spec 09 §7.2).
-  const { data: updated, error: updErr } = await supabase
-    .from("crm_leads")
-    .update({
-      stage_id: input.stage_id,
-      position_in_stage: input.position_in_stage,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", leadId)
-    .eq("updated_at", input.expected_updated_at)
-    .select("id")
-    .maybeSingle();
+  // A autorização de MOVER (dono/manager OU acesso por etapa concedida na
+  // etapa ANTIGA) e o UPDATE em si acontecem dentro de uma função
+  // security definer — RLS declarativa (USING/WITH CHECK) não dá pra usar
+  // aqui porque o WITH CHECK avaliaria a etapa NOVA, e quem só tem acesso por
+  // etapa concedida vai justamente SAIR dela nesta ação. Ver
+  // .specs/features/acesso-por-etapa-do-funil/design.md.
+  const { data: movido, error: moveErr } = await supabase.rpc(
+    "fn_mover_lead_com_permissao_de_etapa",
+    {
+      p_lead_id: leadId,
+      p_stage_id: input.stage_id,
+      p_position_in_stage: input.position_in_stage,
+      p_expected_updated_at: input.expected_updated_at,
+    },
+  );
 
-  if (updErr) {
-    return fail("internal_error", updErr.message, 500, { requestId });
-  }
-
-  if (!updated) {
-    // Concurrent edit. Re-fetch current to surface the latest updated_at.
-    const { data: current } = await supabase
-      .from("crm_leads")
-      .select("updated_at")
-      .eq("id", leadId)
-      .maybeSingle();
-    return fail(
-      "lead_stage_changed_concurrent",
-      t("Lead foi modificado por outro usuário. Recarregue e tente novamente."),
-      409,
-      {
-        details: { current_updated_at: current?.updated_at ?? null },
+  if (moveErr) {
+    if (moveErr.message.includes("lead_stage_changed_concurrent")) {
+      const { data: current } = await supabase
+        .from("crm_leads")
+        .select("updated_at")
+        .eq("id", leadId)
+        .maybeSingle();
+      return fail(
+        "lead_stage_changed_concurrent",
+        t("Lead foi modificado por outro usuário. Recarregue e tente novamente."),
+        409,
+        { details: { current_updated_at: current?.updated_at ?? null }, requestId },
+      );
+    }
+    if (moveErr.message.includes("sem_permissao_para_mover_este_lead")) {
+      return fail("forbidden_stage_move", t("Você não tem acesso para mover este lead."), 403, {
         requestId,
-      },
-    );
+      });
+    }
+    if (moveErr.message.includes("pipeline_immutable_use_clone")) {
+      return fail(
+        "pipeline_immutable_use_clone",
+        t("Move cross-pipeline não é permitido. Clone o lead para o pipeline alvo."),
+        422,
+        { requestId },
+      );
+    }
+    if (moveErr.message.includes("lead_nao_encontrado") || moveErr.message.includes("etapa_nao_encontrada")) {
+      return fail("not_found", t("Lead ou etapa não encontrado."), 404, { requestId });
+    }
+    return fail("internal_error", moveErr.message, 500, { requestId });
   }
 
-  // Re-SELECT so trigger-driven status/closed_at changes are reflected.
-  const { data: fresh } = await supabase
-    .from("crm_leads")
-    .select("*")
-    .eq("id", leadId)
-    .maybeSingle();
-
-  const finalLead = fresh ?? lead;
+  const finalLead = movido as typeof lead;
 
   // Wave 3 (CORE 2): esta é a rota que o BOARD usa — arrastar o card passa por
   // aqui, não pelo moveLeadHandler. O emissor é o mesmo dos outros escritores
