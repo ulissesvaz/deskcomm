@@ -16,14 +16,16 @@
 --
 --   1. `drop not null` — idempotente por natureza: reaplicar numa coluna já
 --      nullable não é erro no Postgres.
---   2. Descobrir e derrubar a FK antiga pelo CATÁLOGO, não por nome fixo — a
---      0234 criou `references auth.users(id)` sem nomear a constraint, e o
---      nome que o Postgres gera por convenção
---      (`user_stage_access_granted_by_fkey`) não é garantia contratual em todo
---      clone. A busca casa por conrelid + contype='f' + confrelid=auth.users +
---      a ÚNICA coluna da FK sendo `granted_by` — distingue da FK de `user_id`,
---      que também aponta pra auth.users mas é outra coluna.
---   3. Recriar com `on delete set null` e nome fixo. Reaplicar este arquivo
+--   2. `drop constraint if exists` + `add constraint` pelo NOME — a forma
+--      canônica que o resto deste apêndice já usa para constraint (o Postgres
+--      não tem `add constraint if not exists`). O nome é determinístico: a
+--      0234 criou a FK sem nomeá-la explicitamente
+--      (`references auth.users(id)`, dentro de um `create table` novo, sem
+--      nenhuma constraint homônima possível antes dela), e a convenção do
+--      Postgres para uma FK de coluna única sem nome explícito é
+--      `<tabela>_<coluna>_fkey` — logo `user_stage_access_granted_by_fkey`
+--      em QUALQUER clone que tenha aplicado a 0234, sem exceção.
+--   3. Recriar com `on delete set null`. Reaplicar este arquivo
 --      dropa-e-recria a mesma FK (idempotente por resultado, não por
 --      no-op — o mesmo idioma de `drop policy if exists` + `create policy`
 --      já usado no resto do baseline).
@@ -32,29 +34,9 @@
 -- mesclada. Isto é uma forward-fix nova, com seu próprio apêndice no
 -- baseline.sql.
 
-do $$
-declare
-  v_constraint text;
-begin
-  select c.conname into v_constraint
-    from pg_constraint c
-   where c.conrelid = 'public.user_stage_access'::regclass
-     and c.contype = 'f'
-     and c.confrelid = 'auth.users'::regclass
-     and array_length(c.conkey, 1) = 1
-     and c.conkey[1] = (
-       select attnum from pg_attribute
-        where attrelid = c.conrelid and attname = 'granted_by'
-     );
-
-  if v_constraint is not null then
-    execute format('alter table public.user_stage_access drop constraint %I', v_constraint);
-  end if;
-end
-$$;
-
 alter table public.user_stage_access alter column granted_by drop not null;
 
+alter table public.user_stage_access drop constraint if exists user_stage_access_granted_by_fkey;
 alter table public.user_stage_access
   add constraint user_stage_access_granted_by_fkey
   foreign key (granted_by) references auth.users(id) on delete set null;
