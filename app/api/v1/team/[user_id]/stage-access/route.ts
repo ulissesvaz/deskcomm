@@ -49,7 +49,7 @@ export async function GET(
   try {
     ativo = await membroAtivo(db, authz.org.orgId, user_id);
   } catch {
-    return fail("internal_error", "Erro ao ler o membro.", 500, { requestId });
+    return fail("internal_error", t("Erro ao ler o membro."), 500, { requestId });
   }
   if (!ativo) return fail("not_found", t("Membro ativo não encontrado."), 404, { requestId });
 
@@ -58,7 +58,7 @@ export async function GET(
     .select("stage_id")
     .eq("organization_id", authz.org.orgId)
     .eq("user_id", user_id);
-  if (error) return fail("internal_error", "Erro ao listar o acesso.", 500, { requestId });
+  if (error) return fail("internal_error", t("Erro ao listar o acesso."), 500, { requestId });
 
   return ok({ stage_ids: (data ?? []).map((r) => (r as { stage_id: string }).stage_id) }, { requestId });
 }
@@ -91,7 +91,7 @@ export async function PUT(
   try {
     ativo = await membroAtivo(db, authz.org.orgId, user_id);
   } catch {
-    return fail("internal_error", "Erro ao ler o membro.", 500, { requestId });
+    return fail("internal_error", t("Erro ao ler o membro."), 500, { requestId });
   }
   if (!ativo) return fail("not_found", t("Membro ativo não encontrado."), 404, { requestId });
 
@@ -104,7 +104,7 @@ export async function PUT(
       .select("id")
       .eq("organization_id", authz.org.orgId)
       .in("id", parsed.data.stage_ids);
-    if (stageErr) return fail("internal_error", "Erro ao validar etapas.", 500, { requestId });
+    if (stageErr) return fail("internal_error", t("Erro ao validar etapas."), 500, { requestId });
     const validasSet = new Set((validas ?? []).map((s) => (s as { id: string }).id));
     const invalida = parsed.data.stage_ids.find((id) => !validasSet.has(id));
     if (invalida) {
@@ -120,7 +120,7 @@ export async function PUT(
     .delete()
     .eq("organization_id", authz.org.orgId)
     .eq("user_id", user_id);
-  if (delErr) return fail("internal_error", "Erro ao atualizar o acesso.", 500, { requestId });
+  if (delErr) return fail("internal_error", t("Erro ao atualizar o acesso."), 500, { requestId });
 
   if (parsed.data.stage_ids.length > 0) {
     const { error: insErr } = await db.from("user_stage_access").insert(
@@ -131,7 +131,7 @@ export async function PUT(
         granted_by: authz.user.id,
       })),
     );
-    if (insErr) return fail("internal_error", "Erro ao salvar o acesso.", 500, { requestId });
+    if (insErr) return fail("internal_error", t("Erro ao salvar o acesso."), 500, { requestId });
   }
 
   await audit({

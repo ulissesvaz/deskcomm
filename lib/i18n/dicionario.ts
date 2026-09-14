@@ -342,6 +342,17 @@ export const DICIONARIO: Traducoes = {
   },
   "Salvar acesso": { es: "Guardar acceso" },
   "Acesso por etapa atualizado.": { es: "Acceso por etapa actualizado." },
+  // ─── Rotas de acesso por etapa do funil (S2.3 do fix round pós-revisão-final) ───
+  "Você não tem acesso para mover este lead.": { es: "No tienes acceso para mover este lead." },
+  "Lead ou etapa não encontrado.": { es: "Lead o etapa no encontrado." },
+  "Membro inválido.": { es: "Miembro inválido." },
+  "Membro ativo não encontrado.": { es: "Miembro activo no encontrado." },
+  "Etapa não pertence a esta organização.": { es: "La etapa no pertenece a esta organización." },
+  "Erro ao ler o membro.": { es: "Error al leer el miembro." },
+  "Erro ao listar o acesso.": { es: "Error al listar el acceso." },
+  "Erro ao validar etapas.": { es: "Error al validar etapas." },
+  "Erro ao atualizar o acesso.": { es: "Error al actualizar el acceso." },
+  "Erro ao salvar o acesso.": { es: "Error al guardar el acceso." },
   // ─── Cabeçalhos de grupo da barra lateral ───
   //
   // ⚠️ NUNCA TIVERAM TRADUÇÃO, e o defeito era invisível: `Sidebar.tsx:83` já
