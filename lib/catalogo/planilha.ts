@@ -25,6 +25,7 @@ const COLUNAS: Record<string, readonly string[]> = {
   codigo: ["codigo", "código", "sku", "ref", "referencia", "referência", "cod"],
   nome: ["nome", "produto", "descricao", "descrição", "titulo", "título", "item"],
   preco: ["preco", "preço", "valor", "preco de venda", "preço de venda", "venda"],
+  preco_parcelado: ["preco parcelado", "preço parcelado", "parcelado", "valor parcelado"],
   custo: ["custo", "preco de custo", "preço de custo", "compra"],
   marca: ["marca", "fabricante"],
   categoria: ["categoria", "tipo", "departamento"],
@@ -55,6 +56,7 @@ export interface LinhaImportada {
   codigo: string;
   nome: string;
   preco_cents: number;
+  preco_parcelado_cents: number | null;
   custo_cents: number | null;
   marca?: string;
   categoria?: string;
@@ -154,6 +156,16 @@ export function lerPlanilha(
       continue;
     }
 
+    const parceladoTexto = valor("preco_parcelado");
+    const preco_parcelado_cents = parceladoTexto === "" ? null : precoParaCentavos(parceladoTexto);
+    if (parceladoTexto !== "" && preco_parcelado_cents === null) {
+      erros.push({
+        linha: numeroNaPlanilha,
+        motivo: _t("preço parcelado não reconhecido (") + `"${parceladoTexto}"` + ")",
+      });
+      continue;
+    }
+
     // Sem código na planilha, o nome vira a identidade. É o que permite reimportar
     // a mesma planilha atualizando em vez de duplicar — que é o gesto real da
     // loja quando o preço muda.
@@ -179,6 +191,7 @@ export function lerPlanilha(
       codigo,
       nome,
       preco_cents,
+      preco_parcelado_cents,
       custo_cents,
       ...(valor("marca") ? { marca: valor("marca") } : {}),
       ...(valor("categoria") ? { categoria: valor("categoria") } : {}),

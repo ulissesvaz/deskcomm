@@ -28,6 +28,16 @@ export const TOOLS_COMERCIO = declararTools([
     pacotes: ["vender", "atender"],
   },
   {
+    name: "crm_calc_installment",
+    category: "read",
+    rotulo: "Calcular parcela do produto",
+    explicacao:
+      "Calcula o valor exato da parcela semanal de um produto a partir do preço parcelado cadastrado, para o assistente nunca dividir o valor de cabeça na conversa com o cliente.",
+    oQueToca: "Catálogo da loja",
+    risco: "seguro",
+    pacotes: ["vender", "atender"],
+  },
+  {
     name: "crm_list_privacy_requests",
     category: "read",
     rotulo: "Ver pedidos de privacidade",

@@ -65,11 +65,14 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   const supabase = await createClient();
-  // A moeda vem da organização, nunca do corpo — ver `moedaDaOrganizacao()`.
-  const moeda = await moedaDaOrganizacao(supabase, authz.org.orgId);
+  // A moeda vem do corpo QUANDO presente — só chega até aqui depois de
+  // requireRole("manager") acima e do enum fechado do Zod (MOEDAS_SERVIDAS).
+  // Ausente no corpo = cai no padrão da organização, como sempre.
+  const { moeda: moedaEnviada, ...produto } = parsed.data;
+  const moeda = moedaEnviada ?? (await moedaDaOrganizacao(supabase, authz.org.orgId));
   const { data, error } = await supabase
     .from("catalog_products")
-    .insert({ ...parsed.data, moeda, organization_id: authz.org.orgId, origem: "manual" })
+    .insert({ ...produto, moeda, organization_id: authz.org.orgId, origem: "manual" })
     .select(COLUNAS_DO_PRODUTO)
     .single();
 

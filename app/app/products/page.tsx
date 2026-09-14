@@ -2,7 +2,9 @@ import { redirect } from "next/navigation";
 
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
+import { moedaDaOrganizacao } from "@/lib/catalogo/moeda-da-org";
 import { traduzir } from "@/lib/i18n/dicionario";
+import { moedaServidaOu } from "@/lib/money";
 import { COLUNAS_DO_PRODUTO, type Produto } from "@/lib/schemas/produtos";
 import { createClient } from "@/lib/supabase/server";
 
@@ -36,6 +38,13 @@ export default async function ProdutosPage() {
   const podeEditar = (user.is_platform_admin && !user.support) || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
 
   const supabase = await createClient();
+  // `moedaDaOrganizacao` devolve o `currency` cru da organização — validado só
+  // na FORMA pelo CHECK do banco, não no conjunto que este produto serve (ver
+  // `MOEDAS_SERVIDAS` em lib/money.ts). `moedaServidaOu` garante que o valor
+  // inicial do seletor abaixo é sempre uma opção que o próprio `<select>`
+  // oferece, mesmo num clone com uma moeda antiga que este produto não serve
+  // mais.
+  const moedaOrg = moedaServidaOu(await moedaDaOrganizacao(supabase, activeOrg.orgId));
   const { data } = await supabase
     .from("catalog_products")
     .select(COLUNAS_DO_PRODUTO)
@@ -48,6 +57,7 @@ export default async function ProdutosPage() {
     <ProdutosClient
       inicial={(data ?? []) as unknown as Produto[]}
       podeEditar={podeEditar}
+      moedaOrg={moedaOrg}
       textos={{
         titulo: t("Produtos"),
         subtitulo: t(

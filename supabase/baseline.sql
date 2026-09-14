@@ -23276,6 +23276,20 @@ delete from public.channel_sessions
 
 notify pgrst,'reload schema';
 
+-- 0233 — preço parcelado por produto (catálogo). Ver migrations/0233 para o
+-- raciocínio completo; aqui é o mesmo SQL, idempotente, aplicado no self-host.
+alter table public.catalog_products
+  add column if not exists preco_parcelado_cents integer;
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'catalog_products_preco_parcelado_nao_negativo') then
+    alter table public.catalog_products
+      add constraint catalog_products_preco_parcelado_nao_negativo
+      check (preco_parcelado_cents is null or preco_parcelado_cents >= 0);
+  end if;
+end $$;
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES

@@ -16,6 +16,7 @@ const DICIONARIO_FAKE: Record<string, string> = {
   "preço não reconhecido (": "PRECIO NO RECONOCIDO (",
   " — escreva assim: 5.499,00": " — ESCRÍBALO ASÍ: 5.499,00",
   "custo não reconhecido (": "COSTO NO RECONOCIDO (",
+  "preço parcelado não reconhecido (": "PRECIO PARCELADO NO RECONOCIDO (",
   "código repetido na planilha (": "CÓDIGO REPETIDO EN LA PLANILLA (",
 };
 const gritar = (texto: string): string => DICIONARIO_FAKE[texto] ?? texto;
@@ -38,6 +39,13 @@ describe("lerPlanilha — mensagens de erro passam por t()", () => {
     const resultado = lerPlanilha(csv, gritar);
     if ("erro" in resultado) throw new Error("não deveria ser erro de planilha inteira");
     expect(resultado.erros[0]!.motivo).toBe('COSTO NO RECONOCIDO ("xyz")');
+  });
+
+  it("traduz preço parcelado não reconhecido por completo", () => {
+    const csv = "codigo,nome,preco,preço parcelado\nX1,Produto,10.00,xyz\n";
+    const resultado = lerPlanilha(csv, gritar);
+    if ("erro" in resultado) throw new Error("não deveria ser erro de planilha inteira");
+    expect(resultado.erros[0]!.motivo).toBe('PRECIO PARCELADO NO RECONOCIDO ("xyz")');
   });
 
   it("traduz código repetido por completo", () => {
@@ -119,5 +127,23 @@ describe("lerPlanilha — a recusa nomeia a coluna que falta", () => {
     const erro = recusa("nome,marca\nCafé,Melitta\n", espanhol);
     expect(erro).toBe("La planilla necesita una columna de precio. Encontré: nome, marca.");
     expect(erro).not.toContain("de nombre");
+  });
+});
+
+describe("lerPlanilha — preço parcelado (coluna opcional)", () => {
+  it("lê a coluna 'preço parcelado' quando presente", () => {
+    const csv = "codigo,nome,preco,preço parcelado\nIP15,iPhone 15,1199.00,1881.00\n";
+    const r = lerPlanilha(csv);
+    expect("erro" in r).toBe(false);
+    if ("erro" in r) return;
+    expect(r.produtos[0]!.preco_parcelado_cents).toBe(188100);
+  });
+
+  it("planilha sem a coluna continua funcionando (sem parcelamento)", () => {
+    const csv = "codigo,nome,preco\nIP15,iPhone 15,1199.00\n";
+    const r = lerPlanilha(csv);
+    expect("erro" in r).toBe(false);
+    if ("erro" in r) return;
+    expect(r.produtos[0]!.preco_parcelado_cents).toBeNull();
   });
 });

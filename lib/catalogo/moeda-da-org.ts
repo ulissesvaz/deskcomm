@@ -22,10 +22,14 @@ import { MOEDA_PADRAO } from "@/lib/money";
  * Derrubar o cadastro do produto porque a leitura de um campo de configuração
  * falhou seria trocar um rótulo errado por um formulário que não salva.
  *
- * ⚠️ O que esta função NUNCA faz é aceitar a moeda de quem chamou. O corpo da
- * requisição não decide unidade, pela mesma razão que não decide escopo
- * (`organization_id` resolvido de fonte confiável, CLAUDE.md multi-tenancy).
- * `produtoCreateSchema` nem declara o campo, então o Zod o descarta antes.
+ * ⚠️ O papel desta função é agora ser o **fallback** quando nenhuma moeda por
+ * produto foi escolhida. A rota `POST /api/v1/products` aceitava moeda do corpo
+ * (Task 3: Zod passou a declarar o campo; Task 4: rota a respeita se enviada
+ * por manager, senão chama esta função). Segurança garantida pelo gate
+ * `requireRole("manager")` e pelo enum fechado do Zod, a mesma razão que
+ * torna seguro o `organization_id` vir de fonte confiável (CLAUDE.md
+ * multi-tenancy). A função em si continua sendo apenas fallback, nunca
+ * aceitando entrada diretamente do cliente — a validação mora na rota.
  */
 export async function moedaDaOrganizacao(
   supabase: SupabaseClient,

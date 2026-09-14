@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { MOEDAS_SERVIDAS } from "@/lib/money";
+
 /**
  * O CONTRATO DO CATÁLOGO — um só, lido pela tela E pela rota.
  *
@@ -98,19 +100,20 @@ export const produtoCreateSchema = z.object({
   marca: z.string().trim().max(80).optional(),
   categoria: z.string().trim().max(80).optional(),
   preco_cents: z.number().int().min(0, "preço não pode ser negativo"),
-  // ⚠️ `moeda` NÃO entra aqui de propósito, e a ausência é a regra.
-  //
-  // Ela esteve neste schema e era controle decorativo ao contrário: a rota
-  // aceitava a moeda do corpo, mas NENHUMA tela oferecia o campo — nem o
-  // formulário de "Novo produto" nem a planilha —, então o único jeito de um
-  // produto não ser BRL era chamar a API por fora do produto. Quem escolhe a
-  // moeda é a organização (`organizations.currency`, migration 0208), e o
-  // servidor a copia na escrita via `moedaDaOrganizacao()`.
-  //
-  // Fora do schema, o Zod descarta a chave: um corpo com `moeda` não falha, é
-  // ignorado — corpo não decide unidade, como não decide escopo. Some também
-  // do `produtoPatchSchema` (que é este `.partial()`), e isso é o certo: a
-  // linha guarda a moeda com que nasceu.
+  // Preço TOTAL parcelável — nunca o preço à vista dividido. Ausente/null =
+  // produto sem opção de parcelamento; o agente (crm_calc_installment) recusa
+  // calcular parcela para quem não tem este campo, em vez de inventar.
+  preco_parcelado_cents: z.number().int().min(0, "preço parcelado não pode ser negativo").nullable().optional(),
+  // ⚠️ MOEDA: aceita do corpo, mas só chega até aqui depois de
+  // requireRole("manager") na rota (app/api/v1/products/route.ts) — e só entre
+  // as que o sistema SERVE (`MOEDAS_SERVIDAS`), nunca texto livre. Ausente =
+  // a rota resolve pela organização (moedaDaOrganizacao()), comportamento de
+  // sempre. Isto substitui a regra anterior ("moeda nunca vem do corpo"):
+  // aquela existia porque nenhuma tela oferecia o campo, e a única forma de
+  // um produto fugir da moeda da organização era chamar a API por fora. Agora
+  // há uma tela (Configurações → Produtos) que oferece a escolha por produto
+  // de propósito — cada produto pode nascer na moeda em que é vendido.
+  moeda: z.enum(MOEDAS_SERVIDAS).optional(),
   custo_cents: z.number().int().min(0).nullable().optional(),
   controla_estoque: z.boolean().default(true),
   quantidade: z.number().int().min(0).default(0),
@@ -132,6 +135,7 @@ export interface Produto {
   marca: string | null;
   categoria: string | null;
   preco_cents: number;
+  preco_parcelado_cents: number | null;
   moeda: string;
   custo_cents: number | null;
   controla_estoque: boolean;
@@ -144,5 +148,5 @@ export interface Produto {
 
 /** As colunas que a tela e a rota leem — uma lista, não duas. */
 export const COLUNAS_DO_PRODUTO =
-  "id, codigo, nome, descricao, marca, categoria, preco_cents, moeda, custo_cents, " +
+  "id, codigo, nome, descricao, marca, categoria, preco_cents, preco_parcelado_cents, moeda, custo_cents, " +
   "controla_estoque, quantidade, ativo, origem, imagem_url, updated_at";

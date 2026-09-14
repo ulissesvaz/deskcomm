@@ -140,7 +140,10 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
     "⚠️ SE VOLTAR MAIS DE UM produto com `empate: true`, NÃO escolha por conta própria — os dois " +
     "casam igualmente o que ela disse, e a diferença entre eles é de preço. Pergunte qual é. " +
     "Lista vazia significa que a loja não tem esse item cadastrado: não invente, ofereça consultar " +
-    "com a equipe.",
+    "com a equipe. " +
+    "⚠️ `preco` é o preço À VISTA — nunca divida ele. Quando o produto tem `preco_parcelado`, esse é " +
+    "o valor TOTAL que pode ser parcelado; se o cliente quiser parcelar, use a ferramenta " +
+    "crm_calc_installment para calcular o valor da parcela — nunca calcule de cabeça.",
   inputSchema: produtosInputShape,
   category: "read",
   requiresRole: "agent",
@@ -183,7 +186,7 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
       const { data: lote, error, count } = await ctx.supabase
         .from("catalog_products")
         .select(
-          "id, codigo, nome, descricao, marca, categoria, preco_cents, moeda, controla_estoque, quantidade, ativo",
+          "id, codigo, nome, descricao, marca, categoria, preco_cents, preco_parcelado_cents, moeda, controla_estoque, quantidade, ativo",
           { count: "exact" },
         )
         .eq("organization_id", ctx.organizationId)
@@ -223,6 +226,7 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
       marca: string | null;
       categoria: string | null;
       preco_cents: number;
+      preco_parcelado_cents: number | null;
       moeda: string;
       controla_estoque: boolean;
       quantidade: number;
@@ -272,6 +276,12 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
         nome: produto.nome,
         preco: formatCents(produto.preco_cents, produto.moeda),
         preco_cents: produto.preco_cents,
+        ...(produto.preco_parcelado_cents
+          ? {
+              preco_parcelado: formatCents(produto.preco_parcelado_cents, produto.moeda),
+              preco_parcelado_cents: produto.preco_parcelado_cents,
+            }
+          : {}),
         ...(produto.marca ? { marca: produto.marca } : {}),
         ...(produto.descricao ? { descricao: produto.descricao } : {}),
         disponivel: !produto.controla_estoque || produto.quantidade > 0,
@@ -283,6 +293,86 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
       // número que sumiu importava.
       ...(ignorados.length > 0 ? { numeros_ignorados: ignorados } : {}),
       ...(mensagem ? { mensagem } : {}),
+    };
+  },
+};
+
+// ---------------------------------------------------------------------------
+// calcular parcela — NUNCA o modelo fazendo a conta
+// ---------------------------------------------------------------------------
+
+const calcInstallmentInputShape = {
+  codigo: z.string().trim().min(1).describe("o código do produto, exatamente como voltou em crm_search_products"),
+  semanas: z.number().int().min(1).describe("quantas semanas o cliente quer para pagar"),
+  entrada_cents: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .default(0)
+    .describe("valor da entrada em centavos, se o cliente vai dar uma — 0 se não"),
+};
+
+export const crmCalcInstallment: McpToolDefinition<typeof calcInstallmentInputShape> = {
+  name: "crm_calc_installment",
+  description:
+    "Calcula o valor exato da parcela semanal de um produto. Use SEMPRE que o cliente quiser " +
+    "parcelar — nunca divida o preço de cabeça, nem o preço à vista (esse é fixo e não entra na " +
+    "conta). O cálculo é (preço parcelado − entrada) ÷ semanas, arredondado para cima. Se a " +
+    "ferramenta devolver um `erro`, diga ao cliente o motivo (produto sem parcelamento, entrada " +
+    "maior que o total) — não invente um valor.",
+  inputSchema: calcInstallmentInputShape,
+  category: "read",
+  requiresRole: "agent",
+  requiresScope: "mcp:read",
+  handler: async (input, ctx) => {
+    const { data, error } = await ctx.supabase
+      .from("catalog_products")
+      .select("preco_parcelado_cents, moeda")
+      .eq("organization_id", ctx.organizationId)
+      .eq("codigo", input.codigo)
+      .maybeSingle();
+
+    if (error) throw new Error(`calcular_parcela_falhou: ${error.message}`);
+    if (!data) return { erro: "produto_nao_encontrado" };
+
+    const produto = data as { preco_parcelado_cents: number | null; moeda: string };
+    // Falsy, não `=== null`: consistente com os outros dois lugares que decidem
+    // "este produto tem preço parcelado" (`crmSearchProducts` acima e a lista
+    // em `app/app/products/_client.tsx`), os dois já tratando `0` como "não
+    // tem". Com `=== null`, um `preco_parcelado_cents: 0` caía no cálculo, e
+    // com a entrada padrão 0 a comparação `0 >= 0` devolvia
+    // "entrada_maior_que_o_total" — dizendo ao cliente que a entrada dele (zero)
+    // era maior que um total que também é zero, o que não faz sentido nenhum.
+    if (!produto.preco_parcelado_cents) {
+      return {
+        erro: "sem_parcelamento",
+        mensagem:
+          "este produto não tem preço parcelado cadastrado — informe que não há opção de " +
+          "parcelamento, não invente um valor.",
+      };
+    }
+    if (input.entrada_cents >= produto.preco_parcelado_cents) {
+      return {
+        erro: "entrada_maior_que_o_total",
+        mensagem:
+          "a entrada informada é maior ou igual ao valor total parcelado — confirme o valor da " +
+          "entrada com o cliente.",
+      };
+    }
+
+    // Arredonda PARA CIMA de propósito: a loja nunca recebe menos que o total
+    // combinado — a diferença de arredondamento (no máximo alguns centavos)
+    // fica embutida na primeira parcela. Mesmo princípio de "falha fechada"
+    // de precoParaCentavos (lib/schemas/produtos.ts).
+    const restante = produto.preco_parcelado_cents - input.entrada_cents;
+    const valor_parcela_cents = Math.ceil(restante / input.semanas);
+
+    return {
+      valor_parcela_cents,
+      valor_parcela_formatado: formatCents(valor_parcela_cents, produto.moeda),
+      semanas: input.semanas,
+      moeda: produto.moeda,
     };
   },
 };

@@ -164,6 +164,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     codigo: p.codigo,
     nome: p.nome,
     preco_cents: p.preco_cents,
+    preco_parcelado_cents: p.preco_parcelado_cents,
     custo_cents: p.custo_cents,
     marca: p.marca ?? null,
     categoria: p.categoria ?? null,
@@ -249,9 +250,9 @@ export async function GET(): Promise<Response> {
   const t = (texto: string) => traduzir(texto, authz.user.idioma);
 
   const modelo = [
-    "codigo,nome,marca,categoria,preco,custo,estoque",
-    "IP15-128,iPhone 15 128GB,Apple,Celular,5499.00,4100.00,3",
-    "PERF-212,212 VIP Men 100ml,Carolina Herrera,Perfume,449.90,280.00,7",
+    "codigo,nome,marca,categoria,preco,parcelado,custo,estoque",
+    "IP15-128,iPhone 15 128GB,Apple,Celular,5499.00,5999.00,4100.00,3",
+    "PERF-212,212 VIP Men 100ml,Carolina Herrera,Perfume,449.90,499.00,280.00,7",
   ].join("\n");
 
   return new Response(`﻿${modelo}\n`, {

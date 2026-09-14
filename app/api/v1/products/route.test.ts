@@ -73,59 +73,32 @@ beforeEach(() => {
   } as never);
 });
 
-describe("POST /api/v1/products — a moeda vem da organização", () => {
+describe("POST /api/v1/products — moeda do produto", () => {
   /**
-   * ⚠️ SABOTAGEM. A moeda do corpo não decide, pela mesma razão que o
-   * `organization_id` do corpo não decide (CLAUDE.md, multi-tenancy): quem
-   * escolhe unidade e escopo é a fonte confiável, nunca o cliente. Sem esta
-   * guarda, uma chamada direta à API grava um produto em USD num catálogo que
-   * a organização declarou em BRL — e o agente cota esse número ao cliente.
+   * A rota exige requireRole("manager") ANTES de ler o corpo (ver o mock de
+   * requireRole no beforeEach) — é essa gate, mais o enum fechado do Zod
+   * (MOEDAS_SERVIDAS), que torna seguro aceitar moeda do corpo agora. Sem
+   * manager mockado como `ok:false`, este teste nem chegaria ao insert.
    */
-  it("ignora a moeda que vem no corpo", async () => {
+  it("usa a moeda enviada no corpo quando presente", async () => {
     vi.mocked(createClient).mockResolvedValue(supabaseCom("BRL") as never);
     const { POST } = await import("./route");
 
-    const resposta = await POST(pedido({ ...PRODUTO, moeda: "USD" }));
+    const resposta = await POST(pedido({ ...PRODUTO, moeda: "GBP" }));
 
     expect(resposta.status).toBe(201);
-    expect(inserido).toMatchObject({ moeda: "BRL" });
-    // O scope também vem de fonte confiável, nunca do body — o mock não pode
-    // só provar "moeda ignorada" enquanto deixa passar um `organization_id`
-    // vazado, que é a MESMA classe de bug (CLAUDE.md, multi-tenancy).
-    expect(orgIdLido).toBe(ORG_ID);
+    expect(inserido).toMatchObject({ moeda: "GBP" });
+    expect(orgIdLido).toBeNull();
   });
 
-  /**
-   * ⚠️ TESTE DISCRIMINANTE. O caso acima sozinho passa VERDE com a moeda
-   * chumbada em 'BRL' — que é exatamente o defeito que este PR conserta. Só a
-   * organização em MXN prova que a rota foi LER a coluna.
-   */
-  it("grava a moeda que a organização declarou, não o padrão", async () => {
+  it("cai na moeda da organização quando o corpo não manda nenhuma", async () => {
     vi.mocked(createClient).mockResolvedValue(supabaseCom("MXN") as never);
     const { POST } = await import("./route");
 
-    const resposta = await POST(pedido({ ...PRODUTO, moeda: "USD" }));
+    const resposta = await POST(pedido(PRODUTO));
 
     expect(resposta.status).toBe(201);
     expect(inserido).toMatchObject({ moeda: "MXN" });
-    expect(orgIdLido).toBe(ORG_ID);
-  });
-
-  /**
-   * A leitura da organização pode falhar (linha some, RLS nega). `moedaDaOrganizacao()`
-   * escreve `MOEDA_PADRAO` ('BRL') EXPLÍCITO no insert — não é o `default` da
-   * coluna que decide, porque a rota manda um valor no corpo do insert de
-   * qualquer forma. O nome deste teste dizia o contrário antes da revisão: o
-   * `default` da coluna nunca chega a ser exercitado por este caminho.
-   */
-  it("cai na moeda padrão quando a organização não responde, escrita explícita", async () => {
-    vi.mocked(createClient).mockResolvedValue(supabaseCom(null) as never);
-    const { POST } = await import("./route");
-
-    const resposta = await POST(pedido({ ...PRODUTO, moeda: "USD" }));
-
-    expect(resposta.status).toBe(201);
-    expect(inserido).toMatchObject({ moeda: "BRL" });
     expect(orgIdLido).toBe(ORG_ID);
   });
 });
