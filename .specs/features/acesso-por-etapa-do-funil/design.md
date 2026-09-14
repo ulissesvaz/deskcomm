@@ -52,7 +52,7 @@ create table if not exists public.user_stage_access (
   organization_id uuid not null references public.organizations(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
   stage_id uuid not null references public.crm_stages(id) on delete cascade,
-  granted_by uuid not null references auth.users(id),
+  granted_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
   unique (user_id, stage_id)
 );
@@ -81,7 +81,7 @@ create policy "user_stage_access_all" on public.user_stage_access
 revoke all on function public.fn_is_platform_admin() from public; -- no-op, já revogado; documenta a intenção
 ```
 
-Nullable em lugar nenhum de propósito: uma linha só existe quando há concessão. Apagar a linha = revogar. `on delete cascade` nas três FKs: apagar a organização, o usuário ou a etapa limpa a concessão sozinha (sem lead-limbo).
+Uma linha só existe quando há concessão. Apagar a linha = revogar. `on delete cascade` em `organization_id`/`user_id`/`stage_id`: apagar a organização, o usuário concedido ou a etapa limpa a concessão sozinha (sem lead-limbo). `granted_by` é a exceção deliberada — é nullable com `on delete set null` (corrigido pela migration forward-fix `0235`, que a implementação original de `0234` deixou `not null` sem `on delete`, quebrando a exclusão de um gerente que já tivesse concedido alguma etapa): a concessão sobrevive a quem a deu, porque revogar acesso não deve depender de quem concedeu ainda existir.
 
 **Função de leitura (auxiliar, `stable`, sem `security definer` — só lê o que a RLS de `user_stage_access` já deixaria o próprio manager ler, mas aqui é chamada pelo AGENTE dentro de outra policy, então precisa bypassar a RLS de `user_stage_access` — daí SIM precisa ser `security definer`):**
 
