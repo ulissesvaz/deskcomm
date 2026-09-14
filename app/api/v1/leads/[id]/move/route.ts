@@ -135,6 +135,17 @@ export async function POST(
     if (moveErr.message.includes("lead_nao_encontrado") || moveErr.message.includes("etapa_nao_encontrada")) {
       return fail("not_found", t("Lead ou etapa não encontrado."), 404, { requestId });
     }
+    if (
+      moveErr.message.includes("sem_acesso_a_organizacao") ||
+      moveErr.message.includes("papel_insuficiente")
+    ) {
+      // Guards de fn_mover_lead_com_permissao_de_etapa anteriores ao de acesso
+      // por etapa (membership/papel). Hoje inalcançáveis por esta rota — o
+      // requireRole("agent") acima já barra antes —, mas um chamador futuro
+      // da RPC (MCP, worker) pode cair aqui, e sem este mapeamento caía no
+      // internal_error genérico com mensagem crua do Postgres.
+      return fail("forbidden", t("Você não tem permissão para esta ação."), 403, { requestId });
+    }
     return fail("internal_error", moveErr.message, 500, { requestId });
   }
 
