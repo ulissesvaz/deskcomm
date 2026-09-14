@@ -200,6 +200,7 @@ export const AUDIT_ACTIONS = [
   "channel.reactivated",
   "authz.denied",
   "team.role_changed",
+  "team.stage_access_updated",
   "leads.bulk_assigned",
   "attendant.availability_changed",
   "routing.config_changed",
