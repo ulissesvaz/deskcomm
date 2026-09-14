@@ -20,8 +20,13 @@ const LEAD_NA_ETAPA = "a5f01111-0000-4000-8000-000000000005"; // stage = STAGE_T
 const LEAD_FORA_DA_ETAPA = "a5f01111-0000-4000-8000-000000000006"; // stage = STAGE_OUTRA, owner = GOV_AGENT_B
 const LEAD_CONTATO2_A = "a5f01111-0000-4000-8000-000000000007"; // stage = STAGE_OUTRA (fora)
 const LEAD_CONTATO2_B = "a5f01111-0000-4000-8000-000000000008"; // stage = STAGE_TECNICO (dentro) — AC4
-const CONVERSA_1 = "a5f01111-0000-4000-8000-000000000009"; // contact_id = CONTACT_1, ninguém atribuído
-const CONVERSA_2 = "a5f01111-0000-4000-8000-00000000000a"; // contact_id = CONTACT_2, ninguém atribuído
+// Atribuídas a GOV_AGENT_B (nunca a GOV_AGENT_A, o usuário sob teste) DE PROPÓSITO:
+// se ficassem sem dono, fn_can_view_conversation já devolveria true pra qualquer
+// agent no default 'own_and_unassigned' do GOV_ORG (baseline.sql:5522-5542), e
+// esconderia por completo o mecanismo novo (fn_has_stage_access_via_contact) que
+// este arquivo existe pra provar — achado da revisão da Task 5, fix round 1.
+const CONVERSA_1 = "a5f01111-0000-4000-8000-000000000009"; // contact_id = CONTACT_1, atribuída a GOV_AGENT_B
+const CONVERSA_2 = "a5f01111-0000-4000-8000-00000000000a"; // contact_id = CONTACT_2, atribuída a GOV_AGENT_B
 
 beforeAll(() => {
   seedGov(); // GOV_ORG (visibility_mode default 'own_and_unassigned') + agents A/B + pipeline/stage
@@ -46,10 +51,11 @@ beforeAll(() => {
         ('${LEAD_CONTATO2_B}',    '${GOV_ORG}', '${GOV_PIPELINE}', '${STAGE_TECNICO}', 'Contato 2, lead dentro', '${GOV_AGENT_B}', '${CONTACT_2}')
       on conflict (id) do nothing;
 
-    insert into public.conversations (id, organization_id, contact_id, channel_session_id, status)
+    insert into public.conversations
+        (id, organization_id, contact_id, channel_session_id, status, assigned_to_user_id, assigned_at)
       values
-        ('${CONVERSA_1}', '${GOV_ORG}', '${CONTACT_1}', '${GOV_SESSION}', 'open'),
-        ('${CONVERSA_2}', '${GOV_ORG}', '${CONTACT_2}', '${GOV_SESSION}', 'open')
+        ('${CONVERSA_1}', '${GOV_ORG}', '${CONTACT_1}', '${GOV_SESSION}', 'claimed', '${GOV_AGENT_B}', now()),
+        ('${CONVERSA_2}', '${GOV_ORG}', '${CONTACT_2}', '${GOV_SESSION}', 'claimed', '${GOV_AGENT_B}', now())
       on conflict (id) do nothing;
   `);
 });
