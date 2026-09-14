@@ -164,6 +164,15 @@ const AUTHENTICATED_PERMITIDO: readonly Excecao[] = [
       "declarado pela migration 0034 e não há call site de RPC para removê-lo " +
       "com segurança sem medir o disparo de cada trigger.",
   },
+  {
+    fn: "fn_mover_lead_com_permissao_de_etapa(uuid,uuid,numeric,timestampwithtimezone)",
+    razao:
+      "POST app/api/v1/leads/[id]/move/route.ts usa createClient da sessão. O corpo valida " +
+      "membership (fn_user_org_ids), papel agent+ e a autorização sobre a etapa ANTIGA " +
+      "(dono/manager OU fn_has_stage_access), mais o OCC por updated_at. " +
+      "tests/invariants/gov-5g-stage-move.test.ts prova recusa sem concessão e saída da " +
+      "etapa concedida.",
+  },
 ];
 
 interface Definer {

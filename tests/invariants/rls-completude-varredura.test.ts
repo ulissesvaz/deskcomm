@@ -91,6 +91,19 @@ const PROVA_PROPRIA: readonly Excecao[] = [
       "por ACERTO ali.",
   },
   {
+    tabela: "user_stage_access",
+    razao:
+      "tests/invariants/acesso-por-etapa-rls.test.ts prova isolamento " +
+      "cross-tenant (manager de A não lê concessão de B) E o gate de papel " +
+      "(agent da própria org não lê). Fica fora de TABLES pelo MESMO motivo " +
+      "de webhook_lead_captures, linha acima: a policy " +
+      "(migration 20260914161936_0234) é `for all using (... and " +
+      "fn_role_at_least(org,'manager'))` — mesma condição para SELECT — e o " +
+      "usuário semeado em rls-isolation.test.ts é `agent`, que não satisfaz " +
+      "`fn_role_at_least(org,'manager')` (nível 2 < 3). O controle positivo " +
+      "do molde genérico falharia por ACERTO, não por RLS frouxa.",
+  },
+  {
     tabela: "meta_templates",
     razao:
       "tests/invariants/meta-templates-rls.test.ts (\"membro da org B NÃO vê " +
