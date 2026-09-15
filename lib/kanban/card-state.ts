@@ -86,6 +86,8 @@ export function buildCardInput(
   opts: {
     stageName: string;
     ownerNames: Map<string, string | null> | undefined;
+    /** owner_user_id → cargo (rótulo visual), resolvido no board. */
+    ownerJobTitles?: Map<string, string | null>;
     /** ids que o radar (fonte única) classificou como esfriando. */
     coolingIds?: Set<string>;
     /** Propostas de retomada VIVAS, por lead — só as `pending` chegam aqui. */
@@ -109,7 +111,7 @@ export function buildCardInput(
     title: lead.title,
     valueCents: lead.value_cents,
     currency: lead.currency,
-    owner: resolveLeadOwner(lead, opts.ownerNames),
+    owner: resolveLeadOwner(lead, opts.ownerNames, opts.ownerJobTitles),
     stageName: opts.stageName,
     hoursInStage,
     isCooling: opts.coolingIds?.has(lead.id) ?? false,

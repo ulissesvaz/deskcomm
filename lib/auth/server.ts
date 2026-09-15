@@ -23,6 +23,7 @@ interface RawMembershipRow {
   interface_settings?: unknown;
   organization_id: string;
   role: string;
+  job_title?: string | null;
   /** Só para ORDENAR — a lista decide qual organização fica ativa sem cookie. */
   accepted_at?: string | null;
   organizations: OrgJoin | OrgJoin[] | null;
@@ -179,7 +180,7 @@ export async function loadAuthUser(): Promise<AuthUser | null> {
   const { data: rawMemberships, error: membErro } = await supabase
     .from("user_organizations")
     .select(
-      "organization_id, role, interface_settings, accepted_at, organizations(display_name, locale)",
+      "organization_id, role, interface_settings, job_title, accepted_at, organizations(display_name, locale)",
     )
     .eq("user_id", user.id)
     .is("revoked_at", null)
@@ -228,6 +229,7 @@ export async function loadAuthUser(): Promise<AuthUser | null> {
       role: row.role as Role,
       interface_settings: lerInterface(row.interface_settings).settings,
       locale: org?.locale ?? null,
+      job_title: row.job_title ?? null,
     };
   });
 
@@ -283,6 +285,7 @@ export async function resolveActiveOrg(authUser: AuthUser): Promise<ActiveOrg | 
     name: ativo.organization_name,
     role: ativo.role,
     interface_settings: ativo.interface_settings,
+    job_title: ativo.job_title ?? null,
   };
 }
 

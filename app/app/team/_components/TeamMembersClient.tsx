@@ -1,6 +1,7 @@
 "use client";
 
 import { MemberInterfaceDialog } from "@/components/team/MemberInterfaceDialog";
+import { MemberJobTitleDialog } from "@/components/team/MemberJobTitleDialog";
 import { MemberStageAccessDialog } from "@/components/team/MemberStageAccessDialog";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useState } from "react";
@@ -47,6 +48,12 @@ import { DotsThree } from "@/lib/ui/icons";
 interface Props {
   currentUserId: string;
   canManage: boolean;
+  /**
+   * Quem pode editar o CARGO (rótulo visual) de cada membro — manager+, mais
+   * permissivo que `canManage` (admin, hoje usado por papel/interface) porque
+   * um campo de texto decorativo não tem a mesma superfície de risco.
+   */
+  canManageJobTitle?: boolean;
   canManageStageAccess: boolean;
   etapas: Array<{ id: string; name: string; pipeline_id: string; position: number }>;
 }
@@ -54,6 +61,7 @@ interface Props {
 export function TeamMembersClient({
   currentUserId,
   canManage,
+  canManageJobTitle = canManage,
   canManageStageAccess,
   etapas,
 }: Props) {
@@ -64,6 +72,7 @@ export function TeamMembersClient({
   const revoke = useRevokeMember();
 
   const [interfaceMember, setInterfaceMember] = useState<TeamMember | null>(null);
+  const [jobTitleMember, setJobTitleMember] = useState<TeamMember | null>(null);
   const [stageAccessMember, setStageAccessMember] = useState<TeamMember | null>(null);
   const [revokeDialog, setRevokeDialog] = useState<TeamMember | null>(null);
 
@@ -85,6 +94,7 @@ export function TeamMembersClient({
           <TableHeader>
             <TableRow>
               <TableHead>{t("Membro")}</TableHead>
+              <TableHead>{t("Cargo")}</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>{t("Interface")}</TableHead>
               {canManageStageAccess ? <TableHead>{t("Acesso por etapa")}</TableHead> : null}
@@ -101,6 +111,20 @@ export function TeamMembersClient({
                     {m.full_name ?? m.email ?? m.user_id.slice(0, 8)}
                   </div>
                   {m.email ? <div className="text-xs text-muted-foreground">{m.email}</div> : null}
+                </TableCell>
+                <TableCell>
+                  {canManageJobTitle ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      aria-label={`${t("Cargo de")} ${m.full_name ?? m.email ?? m.user_id}`}
+                      onClick={() => setJobTitleMember(m)}
+                    >
+                      {m.job_title ?? t("Definir cargo")}
+                    </Button>
+                  ) : (
+                    <span>{m.job_title ?? "—"}</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   {canManage && m.user_id !== currentUserId ? (
@@ -210,6 +234,13 @@ export function TeamMembersClient({
           key={interfaceMember.user_id}
           member={interfaceMember}
           onClose={() => setInterfaceMember(null)}
+        />
+      )}
+      {jobTitleMember && (
+        <MemberJobTitleDialog
+          key={jobTitleMember.user_id}
+          member={jobTitleMember}
+          onClose={() => setJobTitleMember(null)}
         />
       )}
       {stageAccessMember && (

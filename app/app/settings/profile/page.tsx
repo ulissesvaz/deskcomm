@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth/server";
+import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { normalizarIdioma } from "@/lib/i18n/idiomas";
 import { SEM_PREFERENCIA_DE_IDIOMA } from "@/lib/schemas/settings";
@@ -26,6 +26,10 @@ export default async function ProfilePage() {
   //                    uma preferência que ela nunca escolheu — e daí em diante
   //                    a troca de idioma da empresa passaria por cima dela.
   const idioma = user.idioma;
+  // Cargo é por ORGANIZAÇÃO (mesma tabela de `role`), não do usuário — por
+  // isso vem de `resolveActiveOrg`, não de `user_metadata`. Só leitura aqui:
+  // quem edita é gerente/admin, pela tela de Equipe.
+  const activeOrg = await resolveActiveOrg(user);
   return (
     <div className="flex h-full flex-col gap-6 p-6">
       <header>
@@ -40,6 +44,7 @@ export default async function ProfilePage() {
         initialAvatarUrl={meta.avatar_url}
         initialLocale={user.locale ? normalizarIdioma(user.locale) : SEM_PREFERENCIA_DE_IDIOMA}
         initialTimezone={meta.timezone ?? "America/Sao_Paulo"}
+        jobTitle={activeOrg?.job_title ?? null}
       />
     </div>
   );

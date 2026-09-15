@@ -23442,6 +23442,11 @@ alter table public.user_stage_access
   add constraint user_stage_access_granted_by_fkey
   foreign key (granted_by) references auth.users(id) on delete set null;
 
+-- 0236 — cargo (job_title) por membro da equipe. Ver migrations/0236 para o
+-- raciocínio completo; aqui é o mesmo SQL, idempotente, aplicado no self-host.
+alter table public.user_organizations
+  add column if not exists job_title text;
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES

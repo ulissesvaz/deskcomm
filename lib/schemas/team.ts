@@ -40,6 +40,21 @@ export const changeRoleSchema = z.object({
 });
 export type ChangeRoleInput = z.infer<typeof changeRoleSchema>;
 
+/**
+ * Cargo (job_title): rótulo de identificação visual, texto livre, por
+ * organização — NÃO é `role`. `null`/string vazia limpa o cargo (a pessoa
+ * volta a não ter nenhum definido).
+ */
+export const jobTitleSchema = z.object({
+  job_title: z
+    .string()
+    .trim()
+    .max(100)
+    .nullable()
+    .transform((v) => (v === "" ? null : v)),
+});
+export type JobTitleInput = z.infer<typeof jobTitleSchema>;
+
 export const createApiTokenSchema = z.object({
   name: z.string().min(2).max(100),
   scopes: z.array(z.string()).min(1),

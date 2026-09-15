@@ -8162,6 +8162,24 @@ export const DICIONARIO: Traducoes = {
   "Este ponto usa o modelo definido na versão publicada do agente; a escolha do painel não se aplica.": {
     es: "Este punto usa el modelo definido en la versión publicada del agente; la elección del panel no se aplica.",
   },
+
+  // Cargo (rótulo visual, texto livre) por membro da equipe — tela de Equipe,
+  // Perfil, Inbox e Kanban. NÃO é `role`: não muda permissão nem o que a
+  // pessoa vê, só identificação.
+  Cargo: { es: "Cargo" },
+  "Cargo de": { es: "Cargo de" },
+  "Definir cargo": { es: "Definir cargo" },
+  "Cargo atualizado.": { es: "Cargo actualizado." },
+  "Salvar cargo": { es: "Guardar cargo" },
+  "Ex.: Técnico, Consultora de Vendas…": { es: "Ej.: Técnico, Consultora de Ventas…" },
+  "Só identificação visual — aparece do lado do nome na Equipe, no Perfil, no Inbox e no Kanban. Não muda permissão nem o que esta pessoa vê.":
+    {
+      es: "Solo identificación visual — aparece junto al nombre en Equipo, en Perfil, en el Inbox y en el Kanban. No cambia el permiso ni lo que esta persona ve.",
+    },
+  "Não definido": { es: "No definido" },
+  "Definido pelo gerente ou administrador da equipe, na tela de Equipe.": {
+    es: "Definido por el gerente o administrador del equipo, en la pantalla de Equipo.",
+  },
 };
 
 /**

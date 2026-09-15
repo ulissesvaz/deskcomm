@@ -84,6 +84,7 @@ export default async function TeamPage({
           <TeamMembersClient
             currentUserId={user.id}
             canManage={isAdmin}
+            canManageJobTitle={isManager}
             canManageStageAccess={isManager}
             etapas={etapas}
           />
