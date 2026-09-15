@@ -23290,6 +23290,11 @@ begin
   end if;
 end $$;
 
+-- 0234 — cargo (job_title) por membro da equipe. Ver migrations/0234 para o
+-- raciocínio completo; aqui é o mesmo SQL, idempotente, aplicado no self-host.
+alter table public.user_organizations
+  add column if not exists job_title text;
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES
