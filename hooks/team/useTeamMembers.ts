@@ -7,6 +7,7 @@ export interface TeamMember {
   interface_settings?: InterfaceSettings;
   user_id: string;
   role: string;
+  job_title: string | null;
   invited_at: string | null;
   accepted_at: string | null;
   revoked_at: string | null;

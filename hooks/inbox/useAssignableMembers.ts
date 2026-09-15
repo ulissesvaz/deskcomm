@@ -6,6 +6,7 @@ export interface AssignableMember {
   user_id: string;
   role: string;
   full_name: string | null;
+  job_title: string | null;
 }
 
 /** G3-01: destinos válidos de transferência (membros ativos agent+ da org). */

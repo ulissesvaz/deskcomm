@@ -76,6 +76,12 @@ export interface UserOrgMembership {
    * para responder algo que a primeira já tinha em mãos.
    */
   locale?: string | null;
+  /**
+   * Cargo (rótulo visual, texto livre) — NÃO é `role`. `null` = ninguém
+   * definiu. Vem junto pelo mesmo motivo do `locale`: a tela de Perfil precisa
+   * dele no primeiro render, sem uma segunda consulta a `user_organizations`.
+   */
+  job_title?: string | null;
 }
 
 export interface AuthUser {
@@ -141,6 +147,8 @@ export interface ActiveOrg {
   orgId: string;
   name: string;
   role: Role;
+  /** Cargo (rótulo visual) da pessoa NESTA organização — ver `UserOrgMembership`. */
+  job_title?: string | null;
   /**
    * Escopo de visualização da org (G4-01). Opcional: só é preenchido no client
    * context (AppLayout) para a UI do inbox decidir visões visíveis. Não é fonte
