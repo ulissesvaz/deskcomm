@@ -203,6 +203,7 @@ export const AUDIT_ACTIONS = [
   // Cargo (rótulo visual, texto livre) trocado por manager+ na tela de Equipe —
   // não é `role`: não muda permissão nem o que a pessoa vê, só identificação.
   "team.job_title_changed",
+  "team.stage_access_updated",
   "leads.bulk_assigned",
   "attendant.availability_changed",
   "routing.config_changed",

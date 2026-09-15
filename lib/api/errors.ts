@@ -27,6 +27,9 @@ export const ApiErrorCodes = {
   forbidden_role: "forbidden_role",
   forbidden_tenant: "forbidden_tenant",
   lgpd_anonymization_irreversible: "lgpd_anonymization_irreversible",
+  // fn_mover_lead_com_permissao_de_etapa recusa (sem_permissao_para_mover_este_lead):
+  // quem move não é dono/manager do lead nem tem acesso concedido à etapa DE ORIGEM.
+  forbidden_stage_move: "forbidden_stage_move",
 
   // 404
   not_found: "not_found",
