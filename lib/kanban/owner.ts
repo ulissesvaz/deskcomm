@@ -6,6 +6,12 @@ export interface OwnerDisplay {
   name: string | null;
   /** Versão publicada do agente HOJE — resolvida na exibição, nunca no lead. */
   agentVersion: number | null;
+  /**
+   * Cargo (rótulo visual, texto livre) do dono HUMANO — nunca preenchido para
+   * `kind === "ai"` (cargo é conceito de pessoa, não de agente). `null` =
+   * ninguém definiu ou dono não é humano.
+   */
+  jobTitle: string | null;
 }
 
 /**
@@ -27,12 +33,14 @@ export interface OwnerDisplay {
 export function resolveLeadOwner(
   lead: Pick<Lead, "owner_kind" | "owner_user_id" | "owner_agent_id" | "owner_agent">,
   ownerNames: Map<string, string | null> | undefined,
+  ownerJobTitles?: Map<string, string | null>,
 ): OwnerDisplay {
   if (lead.owner_kind === "ai" && lead.owner_agent_id) {
     return {
       kind: "ai",
       name: lead.owner_agent?.name ?? null,
       agentVersion: lead.owner_agent?.version_number ?? null,
+      jobTitle: null,
     };
   }
 
@@ -43,8 +51,9 @@ export function resolveLeadOwner(
       kind: "user",
       name: ownerNames?.get(lead.owner_user_id) ?? null,
       agentVersion: null,
+      jobTitle: ownerJobTitles?.get(lead.owner_user_id) ?? null,
     };
   }
 
-  return { kind: null, name: null, agentVersion: null };
+  return { kind: null, name: null, agentVersion: null, jobTitle: null };
 }

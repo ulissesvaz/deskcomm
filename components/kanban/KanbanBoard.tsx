@@ -88,6 +88,10 @@ export function KanbanBoard({
     () => new Map((members ?? []).map((m) => [m.user_id, m.full_name])),
     [members],
   );
+  const ownerJobTitles = useMemo(
+    () => new Map((members ?? []).map((m) => [m.user_id, m.job_title])),
+    [members],
+  );
   // Esfriando vem do MESMO radar que alimenta /app/radar — o board não
   // reclassifica nada (contrato §3.3). `em_voo` fica de fora: a IA já prometeu
   // voltar, então não há decisão pendente para o humano.
@@ -253,6 +257,7 @@ export function KanbanBoard({
             leads={grouped.get(stage.id) ?? []}
             pipelineId={pipelineId}
             ownerNames={ownerNames}
+            ownerJobTitles={ownerJobTitles}
             coolingIds={coolingIds}
             reactivations={reactivations}
             pulses={pulsesProp ?? queryResult.pulses}
@@ -274,6 +279,7 @@ export function KanbanBoard({
             data.stages.find((s) => s.id === leadDoDossie.stage_id)?.name ?? "—"
           }
           ownerNames={ownerNames}
+          ownerJobTitles={ownerJobTitles}
         />
       )}
     </DragDropContext>

@@ -54,6 +54,12 @@ interface Props {
    * afirme nada".
    */
   automaticoDaOrg?: boolean;
+  /**
+   * owner_user_id → cargo (rótulo visual), resolvido na lista — mesma fonte do
+   * Kanban (`/api/v1/team/assignable`). Só chega quando `mostrarAtendente` é
+   * `true` (ver `ConversationList`); ausente/`undefined` = sem cargo.
+   */
+  jobTitles?: Map<string, string | null>;
 }
 
 /**
@@ -117,6 +123,7 @@ export function ConversationListItem({
   queuePosition,
   mostrarCanal,
   mostrarAtendente,
+  jobTitles,
   mostrarAutomatico = true,
   automaticoDaOrg,
 }: Props) {
@@ -266,7 +273,16 @@ export function ConversationListItem({
               <span className="text-[10px] text-text-muted">+{overflow}</span>
             )}
             {mostrarAtendente && comando.quem === "humano" && (
-              <OwnerBadge ownerKind="user" ownerName={comando.nome ?? t("Atendente")} compacto />
+              <OwnerBadge
+                ownerKind="user"
+                ownerName={comando.nome ?? t("Atendente")}
+                ownerJobTitle={
+                  conversation.assigned_to_user_id
+                    ? (jobTitles?.get(conversation.assigned_to_user_id) ?? null)
+                    : null
+                }
+                compacto
+              />
             )}
             {mostrarCanal && rotuloCanal && (
               <Badge

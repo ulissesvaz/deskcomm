@@ -301,6 +301,7 @@ export function KanbanCard({
               ownerKind={card.owner.kind}
               ownerName={card.owner.name}
               agentVersion={card.owner.agentVersion}
+              ownerJobTitle={card.owner.jobTitle}
             />
             <span className="shrink-0 whitespace-nowrap text-[11px] tabular-nums text-text-muted">
               {state.showStageAge && age

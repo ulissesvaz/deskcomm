@@ -58,6 +58,32 @@ describe("OwnerBadge", () => {
     expect(container.textContent).not.toContain("AI");
   });
 
+  it("dono humano com cargo: aparece visível, junto do nome", () => {
+    render(<OwnerBadge ownerKind="user" ownerName="Maria Silva" ownerJobTitle="Técnico" />);
+    expect(screen.getByText("Maria Silva · Técnico")).toBeInTheDocument();
+    expect(screen.getByLabelText("Responsável: Maria Silva · Técnico")).toBeInTheDocument();
+  });
+
+  it("sem cargo definido, comportamento idêntico a antes (só o nome)", () => {
+    render(<OwnerBadge ownerKind="user" ownerName="Maria Silva" ownerJobTitle={null} />);
+    expect(screen.getByText("Maria Silva")).toBeInTheDocument();
+    expect(screen.queryByText(/·/)).not.toBeInTheDocument();
+  });
+
+  it("cargo NUNCA aparece no dono agente, mesmo que o chamador passe um valor", () => {
+    render(
+      <OwnerBadge
+        ownerKind="ai"
+        ownerName="Agente Beta"
+        agentVersion={3}
+        ownerJobTitle="Técnico"
+      />,
+    );
+    expect(screen.getByText("Agente Beta")).toBeInTheDocument();
+    expect(screen.queryByText(/Técnico/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Responsável: Agente Beta · v3")).toBeInTheDocument();
+  });
+
   it("ownerInitials usa primeira e última palavra", () => {
     expect(ownerInitials("Ana")).toBe("AN");
     expect(ownerInitials("Ana Paula Souza")).toBe("AS");

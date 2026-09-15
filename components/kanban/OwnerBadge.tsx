@@ -25,12 +25,19 @@ export function OwnerBadge({
   ownerKind,
   ownerName,
   agentVersion,
+  ownerJobTitle,
   compacto = false,
 }: {
   ownerKind: OwnerKind;
   ownerName: string | null;
   /** Versão publicada do agente no momento da exibição (nunca congelada no lead). */
   agentVersion?: number | null;
+  /**
+   * Cargo (rótulo visual, texto livre) do dono humano — nunca aplicado ao
+   * dono AGENTE (mesmo que o chamador passe um valor). `null`/ausente = não
+   * mostra nada além do nome, como sempre foi.
+   */
+  ownerJobTitle?: string | null;
   /**
    * Variante de 16px, para a linha do inbox — onde os selos vizinhos têm 16px e
    * um disco de 24px empurraria a altura da linha inteira.
@@ -61,7 +68,13 @@ export function OwnerBadge({
   const isAgent = ownerKind === "ai";
   const label = ownerName ?? t(isAgent ? "Agente" : "Responsável");
   const versionSuffix = isAgent && agentVersion != null ? ` · v${agentVersion}` : "";
-  const fullLabel = `${label}${versionSuffix}`;
+  // Cargo é conceito de PESSOA — nunca aplicado ao dono agente, mesmo que o
+  // chamador passe um valor por engano. Visível inline (não só no
+  // title/aria-label, como a versão do agente): é identificação que o pedido
+  // pediu para APARECER, não para viver só no tooltip.
+  const cargoSuffix = !isAgent && ownerJobTitle ? ` · ${ownerJobTitle}` : "";
+  const visibleLabel = `${label}${cargoSuffix}`;
+  const fullLabel = `${visibleLabel}${versionSuffix}`;
 
   return (
     <div
@@ -86,7 +99,7 @@ export function OwnerBadge({
       <span
         className={`truncate text-text-muted ${compacto ? "max-w-[7rem] text-[10px]" : "max-w-[9rem] text-xs"}`}
       >
-        {label}
+        {visibleLabel}
       </span>
     </div>
   );

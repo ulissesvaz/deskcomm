@@ -15,6 +15,8 @@ interface StageColumnProps {
   pipelineId: string;
   /** owner_user_id → nome, resolvido no board. O dono agente vem no lead. */
   ownerNames?: Map<string, string | null>;
+  /** owner_user_id → cargo (rótulo visual), resolvido no board. */
+  ownerJobTitles?: Map<string, string | null>;
   /** ids que o radar classificou como esfriando (fonte única, não recalculada). */
   coolingIds?: Set<string>;
   /** Propostas de retomada vivas, por lead. */
@@ -52,6 +54,7 @@ export function StageColumn({
   leads,
   pipelineId,
   ownerNames,
+  ownerJobTitles,
   coolingIds,
   reactivations,
   canonicalTags,
@@ -158,6 +161,7 @@ export function StageColumn({
                 card={buildCardInput(lead, {
                   stageName: stage.name,
                   ownerNames,
+                  ownerJobTitles,
                   coolingIds,
                   reactivations,
                   canonicalTags,

@@ -23,6 +23,7 @@ interface Props {
   fieldDefs?: CustomFieldDef[];
   stageName: string;
   ownerNames?: Map<string, string | null>;
+  ownerJobTitles?: Map<string, string | null>;
 }
 
 function formatBRL(cents: number | null, currency: string | null): string {
@@ -59,12 +60,13 @@ export function LeadDossier({
   fieldDefs = [],
   stageName,
   ownerNames,
+  ownerJobTitles,
 }: Props) {
   const tagDoIdioma = useTagDeIdioma();
   const t = useT();
   const campos = useRef<HTMLDivElement | null>(null);
   const timeline = useLeadTimeline(open ? lead.id : null, lead.contact_id);
-  const owner = resolveLeadOwner(lead, ownerNames);
+  const owner = resolveLeadOwner(lead, ownerNames, ownerJobTitles);
   const score = lead.score ?? null;
 
   return (
@@ -94,6 +96,7 @@ export function LeadDossier({
             ownerKind={owner.kind}
             ownerName={owner.name}
             agentVersion={owner.agentVersion}
+            ownerJobTitle={owner.jobTitle}
           />
           {score && (
             // O MESMO componente do card, não uma cópia do medidor.

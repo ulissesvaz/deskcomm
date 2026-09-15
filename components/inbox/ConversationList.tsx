@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useChannelSessions } from "@/hooks/channels/useChannelSessions";
 
 import { useAutomaticoAtivo } from "@/hooks/ai/useAutomaticoAtivo";
+import { useAssignableMembers } from "@/hooks/inbox/useAssignableMembers";
 
 import { ConversationListItem } from "./ConversationListItem";
 import { EmptyInbox } from "@/components/empty";
@@ -94,6 +95,15 @@ export function ConversationList({
     return donos.size > 1;
   }, [filters.assigned_to, filters.comando, items]);
 
+  // Cargo (rótulo visual) de quem está atendendo, junto do selo de atendente.
+  // Só busca quando o selo em si vai aparecer — mesma economia de `mostrarAtendente`:
+  // sem selo de atendente, não há onde mostrar cargo nenhum.
+  const { data: membrosAtribuiveis } = useAssignableMembers(mostrarAtendente);
+  const jobTitles = useMemo(
+    () => new Map((membrosAtribuiveis ?? []).map((m) => [m.user_id, m.job_title])),
+    [membrosAtribuiveis],
+  );
+
   /**
    * O ícone de robô, mesma regra dos dois badges acima: só entra quando
    * DISCRIMINA. A aba "Automático" pede `comando=["automatico"]` — toda linha
@@ -154,6 +164,7 @@ export function ConversationList({
             queuePosition={isQueue ? i + 1 : undefined}
             mostrarCanal={maisDeUmCanal}
             mostrarAtendente={mostrarAtendente}
+            jobTitles={jobTitles}
             mostrarAutomatico={mostrarAutomatico}
             automaticoDaOrg={automaticoDaOrg.data}
           />
