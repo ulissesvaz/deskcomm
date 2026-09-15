@@ -4089,6 +4089,10 @@ export const DICIONARIO: Traducoes = {
   "A verificação em duas etapas da sua conta, os códigos de recuperação e as sessões abertas.": {
     es: "La verificación en dos pasos de tu cuenta, los códigos de recuperación y las sesiones abiertas.",
   },
+  "Defina uma nova senha para sua conta. Se a verificação em duas etapas estiver ativada, o código de 6 dígitos será pedido para confirmar.": {
+    es: "Define una nueva contraseña para tu cuenta. Si la verificación en dos pasos está activada, se pedirá el código de 6 dígitos para confirmar.",
+  },
+  "Trocar senha": { es: "Cambiar contraseña" },
   // ─── Configurações: Funis (etapas + mapeamento do assistente) ───
   "Você ainda não tem nenhum funil. Enquanto for assim, o agente atende normalmente, mas não tem para onde levar o card de ninguém — não há etapas para onde mover. Criar o funil é feito por quem instalou o sistema, direto no banco; depois ele aparece aqui para você escolher a etapa de cada passo.": {
     es: "Todavía no tienes ningún embudo. Mientras sea así, el agente atiende normalmente, pero no tiene adónde llevar la tarjeta de nadie — no hay etapas adonde mover. Crear el embudo lo hace quien instaló el sistema, directo en la base de datos; después aparece aquí para que elijas la etapa de cada paso.",
@@ -7111,6 +7115,13 @@ export const DICIONARIO: Traducoes = {
   "Preço inválido. Escreva assim: 5.499,00": { es: "Precio inválido. Escríbalo así: 5.499,00" },
   "Preço parcelado inválido.": { es: "Precio a plazos inválido." },
   "Custo inválido.": { es: "Costo inválido." },
+  "Preencha o Código — é o que identifica este produto no catálogo.": {
+    es: "Complete el Código — es lo que identifica este producto en el catálogo.",
+  },
+  "Preencha o Nome (pelo menos 2 letras).": { es: "Complete el Nombre (al menos 2 letras)." },
+  "O identificador deste produto (SKU, código de barras, ou qualquer código seu).": {
+    es: "El identificador de este producto (SKU, código de barras, o cualquier código suyo).",
+  },
   "novos": { es: "nuevos" },
   "atualizados": { es: "actualizados" },
   "linhas na planilha": { es: "líneas en la planilla" },
