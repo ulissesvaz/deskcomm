@@ -18,6 +18,7 @@ vi.mock("@/lib/api/client", () => ({
     get: vi.fn(),
     post: vi.fn(),
     patch: vi.fn(),
+    put: vi.fn(),
     delete: vi.fn(),
   },
 }));
@@ -70,13 +71,29 @@ function members(): TeamMember[] {
   ];
 }
 
-function renderClient(props: Partial<{ canManage: boolean }> = {}) {
+const ETAPAS = [
+  { id: "11111111-1111-4111-8111-111111111111", name: "Novo", pipeline_id: "p1", position: 1 },
+  { id: "22222222-2222-4222-8222-222222222222", name: "Qualificado", pipeline_id: "p1", position: 2 },
+];
+
+function renderClient(
+  props: Partial<{
+    canManage: boolean;
+    canManageStageAccess: boolean;
+    etapas: typeof ETAPAS;
+  }> = {},
+) {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   return render(
     <QueryClientProvider client={qc}>
-      <TeamMembersClient currentUserId={ADMIN_ID} canManage={props.canManage ?? true} />
+      <TeamMembersClient
+        currentUserId={ADMIN_ID}
+        canManage={props.canManage ?? true}
+        canManageStageAccess={props.canManageStageAccess ?? false}
+        etapas={props.etapas ?? ETAPAS}
+      />
     </QueryClientProvider>,
   );
 }
@@ -144,5 +161,46 @@ describe("TeamMembersClient — seletor de papel (G2-02)", () => {
     await waitFor(() => expect(trigger).toHaveTextContent("agent"));
     await waitFor(() => expect(toast.error).toHaveBeenCalled());
     expect(toast.success).not.toHaveBeenCalled();
+  });
+});
+
+describe("TeamMembersClient — acesso por etapa (Task 4)", () => {
+  it("botão 'Acesso por etapa' não aparece quando canManageStageAccess=false", async () => {
+    renderClient({ canManageStageAccess: false });
+    expect(await screen.findByText("agente@example.com")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Acesso por etapa/i })).not.toBeInTheDocument();
+  });
+
+  it("gerente abre o diálogo, marca uma etapa e salva via PUT /api/v1/team/[user_id]/stage-access", async () => {
+    vi.mocked(apiClient.get).mockImplementation(async (path: string) => {
+      if (path.endsWith("/stage-access")) return { data: { stage_ids: [] } };
+      return { data: members() };
+    });
+    vi.mocked(apiClient.put).mockResolvedValue({
+      data: { stage_ids: [ETAPAS[0]!.id] },
+    });
+
+    const user = userEvent.setup();
+    renderClient({ canManageStageAccess: true });
+
+    const botoes = await screen.findAllByRole("button", { name: /Acesso por etapa de Agente/i });
+    await user.click(botoes[0]!);
+
+    expect(await screen.findByText("Novo")).toBeInTheDocument();
+    const checkbox = screen.getByRole("checkbox", { name: "Novo" });
+    expect(checkbox).not.toBeChecked();
+    await user.click(checkbox);
+    expect(checkbox).toBeChecked();
+
+    await user.click(screen.getByRole("button", { name: "Salvar acesso" }));
+
+    await waitFor(() =>
+      expect(apiClient.put).toHaveBeenCalledWith(`/api/v1/team/${AGENT_ID}/stage-access`, {
+        stage_ids: [ETAPAS[0]!.id],
+      }),
+    );
+    await waitFor(() =>
+      expect(toast.success).toHaveBeenCalledWith("Acesso por etapa atualizado."),
+    );
   });
 });

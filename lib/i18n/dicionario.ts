@@ -335,6 +335,24 @@ export const DICIONARIO: Traducoes = {
   "A seleção anterior contém áreas que não existem mais. Confira e salve novamente.": { es: "La selección anterior contiene áreas que ya no existen. Revísala y vuelve a guardar." },
   "Salvar interface": { es: "Guardar interfaz" },
   "Sua navegação foi atualizada. Você pode continuar nesta tela.": { es: "Tu navegación se ha actualizado. Puedes continuar en esta pantalla." },
+  "Acesso por etapa": { es: "Acceso por etapa" },
+  "Acesso por etapa de": { es: "Acceso por etapa de" },
+  "Marque as etapas do funil que esta pessoa deve enxergar automaticamente no Inbox e no Kanban — sem precisar que ninguém atribua nada a ela. Sem nenhuma marcada, nada muda para ela.": {
+    es: "Marca las etapas del embudo que esta persona debe ver automáticamente en el Inbox y en el Kanban — sin necesidad de que nadie le asigne nada. Sin ninguna marcada, no cambia nada para ella.",
+  },
+  "Salvar acesso": { es: "Guardar acceso" },
+  "Acesso por etapa atualizado.": { es: "Acceso por etapa actualizado." },
+  // ─── Rotas de acesso por etapa do funil (S2.3 do fix round pós-revisão-final) ───
+  "Você não tem acesso para mover este lead.": { es: "No tienes acceso para mover este lead." },
+  "Lead ou etapa não encontrado.": { es: "Lead o etapa no encontrado." },
+  "Membro inválido.": { es: "Miembro inválido." },
+  "Membro ativo não encontrado.": { es: "Miembro activo no encontrado." },
+  "Etapa não pertence a esta organização.": { es: "La etapa no pertenece a esta organización." },
+  "Erro ao ler o membro.": { es: "Error al leer el miembro." },
+  "Erro ao listar o acesso.": { es: "Error al listar el acceso." },
+  "Erro ao validar etapas.": { es: "Error al validar etapas." },
+  "Erro ao atualizar o acesso.": { es: "Error al actualizar el acceso." },
+  "Erro ao salvar o acesso.": { es: "Error al guardar el acceso." },
   // ─── Cabeçalhos de grupo da barra lateral ───
   //
   // ⚠️ NUNCA TIVERAM TRADUÇÃO, e o defeito era invisível: `Sidebar.tsx:83` já

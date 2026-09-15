@@ -1,6 +1,7 @@
 "use client";
 
 import { MemberInterfaceDialog } from "@/components/team/MemberInterfaceDialog";
+import { MemberStageAccessDialog } from "@/components/team/MemberStageAccessDialog";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -46,9 +47,16 @@ import { DotsThree } from "@/lib/ui/icons";
 interface Props {
   currentUserId: string;
   canManage: boolean;
+  canManageStageAccess: boolean;
+  etapas: Array<{ id: string; name: string; pipeline_id: string; position: number }>;
 }
 
-export function TeamMembersClient({ currentUserId, canManage }: Props) {
+export function TeamMembersClient({
+  currentUserId,
+  canManage,
+  canManageStageAccess,
+  etapas,
+}: Props) {
   const tagDoIdioma = useTagDeIdioma();
   const t = useT();
   const { data, isLoading, isError } = useTeamMembers();
@@ -56,6 +64,7 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
   const revoke = useRevokeMember();
 
   const [interfaceMember, setInterfaceMember] = useState<TeamMember | null>(null);
+  const [stageAccessMember, setStageAccessMember] = useState<TeamMember | null>(null);
   const [revokeDialog, setRevokeDialog] = useState<TeamMember | null>(null);
 
   if (isLoading) {
@@ -78,6 +87,7 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
               <TableHead>{t("Membro")}</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>{t("Interface")}</TableHead>
+              {canManageStageAccess ? <TableHead>{t("Acesso por etapa")}</TableHead> : null}
               <TableHead>{t("Status")}</TableHead>
               <TableHead>{t("Última atividade")}</TableHead>
               {canManage ? <TableHead className="w-[80px]" /> : null}
@@ -142,6 +152,18 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
                     </span>
                   )}
                 </TableCell>
+                {canManageStageAccess ? (
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      aria-label={`${t("Acesso por etapa de")} ${m.full_name ?? m.email ?? m.user_id}`}
+                      onClick={() => setStageAccessMember(m)}
+                    >
+                      {t("Acesso por etapa")}
+                    </Button>
+                  </TableCell>
+                ) : null}
                 <TableCell>
                   {m.accepted_at ? (
                     <Badge variant="default">{t("Aceito")}</Badge>
@@ -188,6 +210,14 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
           key={interfaceMember.user_id}
           member={interfaceMember}
           onClose={() => setInterfaceMember(null)}
+        />
+      )}
+      {stageAccessMember && (
+        <MemberStageAccessDialog
+          key={stageAccessMember.user_id}
+          member={stageAccessMember}
+          etapas={etapas}
+          onClose={() => setStageAccessMember(null)}
         />
       )}
       <Dialog open={!!revokeDialog} onOpenChange={(o) => !o && setRevokeDialog(null)}>
