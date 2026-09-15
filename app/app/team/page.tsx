@@ -64,7 +64,11 @@ export default async function TeamPage({
           <TabsTrigger value="attendants">{t("Atendimento")}</TabsTrigger>
         </TabsList>
         <TabsContent value="members" className="mt-4">
-          <TeamMembersClient currentUserId={user.id} canManage={isAdmin} />
+          <TeamMembersClient
+            currentUserId={user.id}
+            canManage={isAdmin}
+            canManageJobTitle={isManager}
+          />
         </TabsContent>
         <TabsContent value="attendants" className="mt-4">
           {isManager ? (

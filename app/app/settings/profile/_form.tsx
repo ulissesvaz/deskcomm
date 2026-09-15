@@ -36,6 +36,12 @@ interface Props {
   initialAvatarUrl: string | null;
   initialLocale: Locale | typeof SEM_PREFERENCIA_DE_IDIOMA;
   initialTimezone: string;
+  /**
+   * Cargo (rótulo visual) na organização ativa. Só leitura — quem edita é
+   * gerente/admin, pela tela de Equipe. `undefined` só em quem chama sem essa
+   * prop (testes existentes); trate igual a `null`.
+   */
+  jobTitle?: string | null;
 }
 
 export function ProfileForm({
@@ -44,6 +50,7 @@ export function ProfileForm({
   initialAvatarUrl,
   initialLocale,
   initialTimezone,
+  jobTitle = null,
 }: Props) {
   const t = useT();
   const [fullName, setFullName] = useState(initialFullName ?? "");
@@ -89,6 +96,13 @@ export function ProfileForm({
             onChange={(e) => setFullName(e.target.value)}
             maxLength={120}
           />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="job_title">{t("Cargo")}</Label>
+          <Input id="job_title" value={jobTitle ?? t("Não definido")} disabled />
+          <p className="text-xs text-muted-foreground">
+            {t("Definido pelo gerente ou administrador da equipe, na tela de Equipe.")}
+          </p>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">

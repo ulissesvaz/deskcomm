@@ -48,6 +48,7 @@ function members(): TeamMember[] {
     {
       user_id: ADMIN_ID,
       role: "admin",
+      job_title: null,
       invited_at: null,
       accepted_at: "2026-01-01T00:00:00Z",
       revoked_at: null,
@@ -59,6 +60,7 @@ function members(): TeamMember[] {
     {
       user_id: AGENT_ID,
       role: "agent",
+      job_title: null,
       invited_at: null,
       accepted_at: "2026-01-02T00:00:00Z",
       revoked_at: null,
