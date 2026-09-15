@@ -10,9 +10,9 @@ import { GOV_AGENT_A, GOV_AGENT_B, GOV_ORG, GOV_PIPELINE, sql, seedGov } from ".
  * USING/WITH CHECK simétrica bloquearia (ver design.md).
  */
 
-const STAGE_A = "a5g01111-0000-4000-8000-000000000001"; // concedida ao agent A
-const STAGE_B = "a5g01111-0000-4000-8000-000000000002"; // NÃO concedida a ninguém
-const LEAD = "a5g01111-0000-4000-8000-000000000003"; // owner = GOV_AGENT_B (não é A), stage inicial = STAGE_A
+const STAGE_A = "a5d01111-0000-4000-8000-000000000001"; // concedida ao agent A
+const STAGE_B = "a5d01111-0000-4000-8000-000000000002"; // NÃO concedida a ninguém
+const LEAD = "a5d01111-0000-4000-8000-000000000003"; // owner = GOV_AGENT_B (não é A), stage inicial = STAGE_A
 
 function moverComo(
   userId: string,
@@ -62,13 +62,13 @@ describe("eixo 5g — mover lead só com acesso por etapa (P3)", () => {
     // Cria um segundo lead, fora de qualquer concessão de A, dono = B.
     sql(`
       insert into public.crm_leads (id, organization_id, pipeline_id, stage_id, title, owner_user_id)
-        values ('a5g01111-0000-4000-8000-000000000099', '${GOV_ORG}', '${GOV_PIPELINE}', '${STAGE_B}', 'Fora', '${GOV_AGENT_B}')
+        values ('a5d01111-0000-4000-8000-000000000099', '${GOV_ORG}', '${GOV_PIPELINE}', '${STAGE_B}', 'Fora', '${GOV_AGENT_B}')
         on conflict (id) do nothing;
     `);
     const updatedAt = sql(
-      `select updated_at::text from public.crm_leads where id = 'a5g01111-0000-4000-8000-000000000099';`,
+      `select updated_at::text from public.crm_leads where id = 'a5d01111-0000-4000-8000-000000000099';`,
     );
-    const r = moverComo(GOV_AGENT_A, "a5g01111-0000-4000-8000-000000000099", STAGE_A, updatedAt);
+    const r = moverComo(GOV_AGENT_A, "a5d01111-0000-4000-8000-000000000099", STAGE_A, updatedAt);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.erro).toContain("sem_permissao_para_mover_este_lead");
   });
