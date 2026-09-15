@@ -84,7 +84,7 @@ export function ReassignDialog({ conversationId, open, onOpenChange }: Props) {
                   <SelectItem key={m.user_id} value={m.user_id}>
                     {m.full_name ?? `${t("Atendente")} ${m.user_id.slice(0, 8)}`}
                     <span className="ml-1 text-muted-foreground">
-                      · {t(ROLE_LABEL[m.role] ?? m.role)}
+                      · {m.job_title ?? t(ROLE_LABEL[m.role] ?? m.role)}
                     </span>
                   </SelectItem>
                 ))}

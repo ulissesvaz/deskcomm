@@ -44,6 +44,8 @@ export const FUSOS_OFERECIDOS: { codigo: string; rotulo: string }[] = [
   { codigo: "America/Belem", rotulo: "Belém (Brasil)" },
   { codigo: "America/Recife", rotulo: "Recife (Brasil)" },
   { codigo: "America/Fortaleza", rotulo: "Fortaleza (Brasil)" },
+  { codigo: "Europe/London", rotulo: "Londres (Reino Unido)" },
+  { codigo: "Europe/Lisbon", rotulo: "Lisboa (Portugal)" },
   { codigo: "UTC", rotulo: "UTC" },
 ];
 
